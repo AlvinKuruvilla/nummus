@@ -1,0 +1,25 @@
+[package]
+name = "ducat"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[patch.crates-io]
+folding-schemes = { git = "https://github.com/AlvinKuruvilla/sonobe.git" }
+
+[dependencies]
+ark-std = "^0.4.0"
+ark-ff = "0.4.2"
+ark-bn254 = { version = "0.4.0" }
+ark-crypto-primitives = { version = "^0.4.0", default-features = false, features = [
+    "r1cs",
+    "sponge",
+    "crh",
+] }
+ark-r1cs-std = { version = "0.4.0", default-features = false } # this is patched at the workspace level
+rand = "0.8.5"
+rs_merkle = "1.4.2"
+ark-relations = "0.4.0"
+[[example]]
+name = "bt"
+path = "bin/bt.rs"
