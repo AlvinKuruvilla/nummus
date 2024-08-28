@@ -7,15 +7,15 @@ use ark_r1cs_std::{
 use ark_relations::r1cs::ConstraintSystem;
 use rand::thread_rng;
 
-use crate::gadgets::merkle_gadget::MerkleTreeGadget;
+use crate::{gadgets::merkle_gadget::MerkleTreeGadget, utils::string_to_fpvar};
 
 use super::{address::Address, serial_number::TransactionSerialNumber};
 
 pub struct Transaction<F: PrimeField> {
     transaction_id: FpVar<F>,
-    value: FpVar<F>,
-    sender_address: Address<F>, // built from the spending key of the sender
-    receiver_address: Address<F>, // built from the spending key of the receiver
+    value: i32,
+    sender_address: Address,   // built from the spending key of the sender
+    receiver_address: Address, // built from the spending key of the receiver
     serial_number: TransactionSerialNumber<F>,
 }
 impl<F> Transaction<F>
@@ -24,9 +24,9 @@ where
 {
     pub fn new(
         transaction_id: FpVar<F>,
-        value: FpVar<F>,
-        sender_address_secret: FpVar<F>,
-        receiver_address_secret: FpVar<F>,
+        value: i32,
+        sender_address_secret: String,
+        receiver_address_secret: String,
         sn_secret: FpVar<F>,
     ) -> Self {
         Self {
@@ -40,26 +40,32 @@ where
     pub fn transaction_id(&self) -> FpVar<F> {
         self.transaction_id.clone()
     }
-    pub fn value(&self) -> FpVar<F> {
-        self.value.clone()
+    pub fn value(&self) -> i32 {
+        self.value
     }
-    pub fn sender_address(&self) -> Address<F> {
+    pub fn value_as_field_element(&self) -> FpVar<F> {
+        let cs = ConstraintSystem::<F>::new_ref();
+        let field_element = F::from(self.value() as u64);
+        FpVar::<F>::new_input(cs, || Ok(field_element)).unwrap()
+    }
+    pub fn sender_address(&self) -> Address {
         self.sender_address.clone()
     }
-    pub fn receiver_address(&self) -> Address<F> {
+    pub fn receiver_address(&self) -> Address {
         self.receiver_address.clone()
     }
     pub fn serial_number(&self) -> FpVar<F> {
         self.serial_number.sn()
     }
     pub fn to_vec(&self) -> Vec<FpVar<F>> {
+        let cs = ConstraintSystem::<F>::new_ref();
         vec![
             self.transaction_id(),
-            self.value(),
-            self.sender_address().public_key(),
-            self.sender_address().secret_key(),
-            self.receiver_address().public_key(),
-            self.receiver_address().secret_key(),
+            self.value_as_field_element(),
+            string_to_fpvar(self.sender_address().public_key(), cs.clone()),
+            string_to_fpvar(self.sender_address().secret_key(), cs.clone()),
+            string_to_fpvar(self.receiver_address().public_key(), cs.clone()),
+            string_to_fpvar(self.receiver_address().secret_key(), cs.clone()),
             self.serial_number(),
         ]
     }
@@ -81,20 +87,20 @@ where
     /// This assumes a single split where the remainder is given back to the original person
     pub fn split_transaction(
         &self,
-        split_values: Vec<FpVar<F>>, // The values to split into
-        new_receiver_addresses: Vec<Address<F>>, // The new receiver addresses for each split
-        sender_address_secret: FpVar<F>, // Sender's secret key
+        split_values: Vec<i32>,               // The values to split into
+        new_receiver_addresses: Vec<Address>, // The new receiver addresses for each split
+        sender_address_secret: String,        // Sender's secret key
     ) -> Vec<Self> {
         // Ensure that the split values sum up to the original transaction value
         let cs = ConstraintSystem::<F>::new_ref();
-        let mut total_split_value = FpVar::<F>::zero();
+        let mut total_split_value = 0;
 
         for split_value in &split_values {
             total_split_value += split_value;
         }
 
         // Enforce that the sum of the split values equals the original transaction value
-        total_split_value.enforce_equal(&self.value).unwrap();
+        assert_eq!(total_split_value, self.value());
 
         // Create the split transactions
         let mut split_transactions = Vec::new();

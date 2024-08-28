@@ -591,8 +591,3 @@ dependencies = [
  "quote",
  "syn 2.0.76",
 ]
-
-[[patch.unused]]
-name = "folding-schemes"
-version = "0.1.0"
-source = "git+https://github.com/AlvinKuruvilla/sonobe.git#5211d15a4a75c479ccb0b720aa471f6fe19f8b3f"
