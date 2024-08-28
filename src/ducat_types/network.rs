@@ -1,5 +1,11 @@
+use ark_bn254::{Bn254, Fr};
+use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
+use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
+use rand::rngs::OsRng;
 use std::collections::HashMap;
+
+use crate::gadgets::epoch_circuit::{generate_proof, EpochBalanceCircuit};
 
 use super::{blockchain::Blockchain, org::Organization, transaction::Transaction};
 
@@ -62,10 +68,39 @@ where
         }
     }
     pub fn transfer_delta_to_organization_balance(&mut self) {
-        // TODO: Construct a proof of the delta (somehow) before updating balance and clearing the delta
         for org in self.organizations.values_mut() {
             org.update_balance(org.delta());
             org.clear_delta();
+        }
+    }
+    pub fn validate_all_epoch_deltas_and_final_balances(&mut self) {
+        let mut rng = OsRng;
+        for org in self.organizations.values_mut() {
+            let (proving_key, verifying_key) =
+                Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
+                    EpochBalanceCircuit::<Fr>::new(
+                        org.initial_balance(),
+                        org.final_balance(),
+                        org.delta(),
+                    ),
+                    &mut rng,
+                )
+                .unwrap();
+            let proof = generate_proof(
+                org.initial_balance(),
+                org.final_balance(),
+                org.delta(),
+                &proving_key,
+            );
+
+            // Prepare the verifying key
+            let pvk = prepare_verifying_key(&verifying_key);
+
+            // Verify the proof
+            let is_valid =
+                Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &proof, &[]).unwrap();
+
+            println!("Proof is valid: {}", is_valid);
         }
     }
 }
