@@ -64,6 +64,7 @@ fn bt_test() {
         println!("Transferring deltas to org balance");
         network.transfer_delta_to_organization_balance();
         network.dump_network_info();
+        network.validate_all_epoch_deltas_and_final_balances();
     }
 }
 pub fn main() {
