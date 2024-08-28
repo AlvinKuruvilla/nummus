@@ -8,7 +8,8 @@ pub struct Organization<F: PrimeField> {
     spent_serial_numbers: Vec<FpVar<F>>, // TODO: When using this we should have sanity checks that panic if repeats exist
     used_address_public_keys: Vec<String>, // TODO: When using this we should have sanity checks that panic if repeats exist
     unique_identifier: String,
-    initial_balance: i32,
+    _initial_balance: i32,
+    final_balance: i32,
     epoch_balance_delta: i32,
 }
 impl<F> Organization<F>
@@ -24,7 +25,9 @@ where
             spent_serial_numbers: Vec::new(),
             used_address_public_keys: known_addresses,
             unique_identifier,
-            initial_balance,
+            // NOTE: this field should not be directly accessed or mutated. There is a getter provided to retrieve the value
+            _initial_balance: initial_balance,
+            final_balance: initial_balance,
             epoch_balance_delta: 0,
         }
     }
@@ -40,11 +43,17 @@ where
     pub fn delta(&self) -> i32 {
         self.epoch_balance_delta
     }
+    pub fn final_balance(&self) -> i32 {
+        self.final_balance
+    }
+    pub fn initial_balance(&self) -> i32 {
+        self._initial_balance
+    }
     pub fn update_delta(&mut self, value: i32) {
         self.epoch_balance_delta += value;
     }
     pub fn update_balance(&mut self, epoch_delta: i32) {
-        self.initial_balance += epoch_delta;
+        self.final_balance += epoch_delta;
     }
     pub fn identifier(&self) -> String {
         self.unique_identifier.clone()
@@ -52,7 +61,7 @@ where
     pub fn dump_info(&self) {
         println!("Organization: {}", self.unique_identifier);
         println!("========================");
-        println!("Balance: {}", self.initial_balance);
+        println!("Balance: {}", self.final_balance());
         println!("Epoch Delta: {}", self.epoch_balance_delta);
         println!("Known Addresses: {:?}", self.used_address_public_keys);
     }
