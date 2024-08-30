@@ -84,6 +84,13 @@ where
                 "\x1b[32mValidating Organization: {}\x1b[0m",
                 org.identifier()
             );
+            let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
+            if !org.validate_transaction_serial_numbers(blockchain_keys) {
+                panic!(
+                    "Could not validate {}'s spent transaction serial numbers",
+                    org.identifier()
+                );
+            }
             let (proving_key, verifying_key) =
                 Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
                     EpochBalanceCircuit::<Fr>::new(

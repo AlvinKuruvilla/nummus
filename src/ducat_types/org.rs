@@ -1,6 +1,6 @@
 use ark_ff::PrimeField;
 use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
-use ark_relations::r1cs::ConstraintSystemRef;
+use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 
 use super::transaction::Transaction;
 
@@ -75,6 +75,20 @@ where
     pub fn is_involved(&self, t: &Transaction<F>) -> bool {
         self.has_address(t.sender_address().public_key())
             || self.has_address(t.receiver_address().public_key())
+    }
+    pub fn validate_transaction_serial_numbers(&self, blockchain_serial_numbers: Vec<F>) -> bool {
+        let cs = ConstraintSystem::<F>::new_ref();
+        self.spent_serial_numbers.iter().all(|serial| {
+            blockchain_serial_numbers.iter().any(|blockchain_serial| {
+                let blockchain_serial_var =
+                    FpVar::new_input(cs.clone(), || Ok(blockchain_serial)).unwrap();
+                serial
+                    .is_eq(&blockchain_serial_var)
+                    .unwrap()
+                    .value()
+                    .unwrap_or(false)
+            })
+        })
     }
     pub fn create_known_addresses(
         cs: ConstraintSystemRef<F>,
