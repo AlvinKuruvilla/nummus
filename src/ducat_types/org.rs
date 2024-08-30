@@ -64,6 +64,7 @@ where
         println!("Balance: {}", self.final_balance());
         println!("Epoch Delta: {}", self.epoch_balance_delta);
         println!("Known Addresses: {:?}", self.used_address_public_keys);
+        println!()
     }
     pub fn has_address(&self, address_public_key: String) -> bool {
         self.used_address_public_keys

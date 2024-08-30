@@ -80,20 +80,24 @@ where
     pub fn validate_all_epoch_deltas_and_final_balances(&mut self) {
         let mut rng = OsRng;
         for org in self.organizations.values_mut() {
+            println!(
+                "\x1b[32mValidating Organization: {}\x1b[0m",
+                org.identifier()
+            );
             let (proving_key, verifying_key) =
                 Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
                     EpochBalanceCircuit::<Fr>::new(
                         org.initial_balance(),
-                        org.final_balance(),
                         org.delta(),
+                        org.final_balance(),
                     ),
                     &mut rng,
                 )
                 .unwrap();
             let proof = generate_proof(
                 org.initial_balance(),
-                org.final_balance(),
                 org.delta(),
+                org.final_balance(),
                 &proving_key,
             );
 
