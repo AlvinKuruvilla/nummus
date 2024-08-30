@@ -45,6 +45,9 @@ where
 
         println!("========================");
     }
+    pub fn inner(&self) -> HashMap<SN<F>, ROOT<F>> {
+        self.inner.clone()
+    }
 }
 impl<F> Default for Blockchain<F>
 where
