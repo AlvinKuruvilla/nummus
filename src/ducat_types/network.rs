@@ -41,7 +41,7 @@ where
         // Forward the transaction to all organizations
         for org in self.organizations.values_mut() {
             if org.is_involved(&t) {
-                // TODO: I don't think an org needs to do this since they should the address already in their cache
+                // I don't think an org needs to do this since they should the address already in their cache
                 // Add public keys and serial numbers if they match this organization's records
                 // org.add_address_public_key(t.sender_address().public_key());
 
@@ -49,10 +49,12 @@ where
                 if org.has_address(t.receiver_address().public_key()) {
                     org.add_serial_number(t.serial_number());
                     org.update_delta(t.value());
+                    org.add_root(t.root());
                 }
                 if org.has_address(t.sender_address().public_key()) {
                     org.add_serial_number(t.serial_number());
                     org.update_delta(-t.value());
+                    org.add_root(t.root());
                 }
             }
         }
@@ -77,6 +79,7 @@ where
             org.update_balance(org.delta());
         }
     }
+    // TODO: This function should be really be inside the organization and the network should just pass the needed info as parameters
     pub fn validate_all_epoch_deltas_and_final_balances(&mut self) {
         let mut rng = OsRng;
         for org in self.organizations.values_mut() {
@@ -85,12 +88,20 @@ where
                 org.identifier()
             );
             let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
+            let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
             if !org.validate_transaction_serial_numbers(blockchain_keys) {
                 panic!(
                     "Could not validate {}'s spent transaction serial numbers",
                     org.identifier()
                 );
             }
+            if !org.validate_transaction_roots(blockchain_values) {
+                panic!(
+                    "Could not validate {}'s spent transaction Merkle tree root",
+                    org.identifier()
+                );
+            }
+
             let (proving_key, verifying_key) =
                 Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
                     EpochBalanceCircuit::<Fr>::new(

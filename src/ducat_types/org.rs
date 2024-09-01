@@ -5,8 +5,10 @@ use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use super::transaction::Transaction;
 
 pub struct Organization<F: PrimeField> {
+    // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
     spent_serial_numbers: Vec<FpVar<F>>, // TODO: When using this we should have sanity checks that panic if repeats exist
     used_address_public_keys: Vec<String>, // TODO: When using this we should have sanity checks that panic if repeats exist
+    transaction_root_cache: Vec<FpVar<F>>,
     unique_identifier: String,
     _initial_balance: i32,
     final_balance: i32,
@@ -25,6 +27,7 @@ where
             spent_serial_numbers: Vec::new(),
             used_address_public_keys: known_addresses,
             unique_identifier,
+            transaction_root_cache: Vec::new(),
             // NOTE: this field should not be directly accessed or mutated. There is a getter provided to retrieve the value
             _initial_balance: initial_balance,
             final_balance: initial_balance,
@@ -36,6 +39,9 @@ where
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
         self.spent_serial_numbers.push(sn);
+    }
+    pub fn add_root(&mut self, root: FpVar<F>) {
+        self.transaction_root_cache.push(root);
     }
     pub fn clear_delta(&mut self) {
         self.epoch_balance_delta = 0;
@@ -88,6 +94,22 @@ where
                     .value()
                     .unwrap_or(false)
             })
+        })
+    }
+    pub fn validate_transaction_roots(&self, blockchain_transaction_roots: Vec<F>) -> bool {
+        let cs = ConstraintSystem::<F>::new_ref();
+        self.transaction_root_cache.iter().all(|t_root| {
+            blockchain_transaction_roots
+                .iter()
+                .any(|blockchan_transaction_root| {
+                    let blockchain_t_root_var =
+                        FpVar::new_input(cs.clone(), || Ok(blockchan_transaction_root)).unwrap();
+                    t_root
+                        .is_eq(&blockchain_t_root_var)
+                        .unwrap()
+                        .value()
+                        .unwrap_or(false)
+                })
         })
     }
     pub fn create_known_addresses(
