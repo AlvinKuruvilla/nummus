@@ -1,11 +1,5 @@
-use ark_bn254::{Bn254, Fr};
-use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
-use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
-use rand::rngs::OsRng;
 use std::collections::HashMap;
-
-use crate::gadgets::epoch_circuit::{generate_proof, EpochBalanceCircuit};
 
 use super::{blockchain::Blockchain, org::Organization, transaction::Transaction};
 
@@ -79,54 +73,12 @@ where
             org.update_balance(org.delta());
         }
     }
-    // TODO: This function should be really be inside the organization and the network should just pass the needed info as parameters
     pub fn validate_all_epoch_deltas_and_final_balances(&mut self) {
-        let mut rng = OsRng;
+        let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
+        let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
+
         for org in self.organizations.values_mut() {
-            println!(
-                "\x1b[32mValidating Organization: {}\x1b[0m",
-                org.identifier()
-            );
-            let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
-            let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
-            if !org.validate_transaction_serial_numbers(blockchain_keys) {
-                panic!(
-                    "Could not validate {}'s spent transaction serial numbers",
-                    org.identifier()
-                );
-            }
-            if !org.validate_transaction_roots(blockchain_values) {
-                panic!(
-                    "Could not validate {}'s spent transaction Merkle tree root",
-                    org.identifier()
-                );
-            }
-
-            let (proving_key, verifying_key) =
-                Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
-                    EpochBalanceCircuit::<Fr>::new(
-                        org.initial_balance(),
-                        org.delta(),
-                        org.final_balance(),
-                    ),
-                    &mut rng,
-                )
-                .unwrap();
-            let proof = generate_proof(
-                org.initial_balance(),
-                org.delta(),
-                org.final_balance(),
-                &proving_key,
-            );
-
-            // Prepare the verifying key
-            let pvk = prepare_verifying_key(&verifying_key);
-
-            // Verify the proof
-            let is_valid =
-                Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &proof, &[]).unwrap();
-
-            println!("Proof is valid: {}", is_valid);
+            org.validate_components(blockchain_keys.clone(), blockchain_values.clone())
         }
     }
 }

@@ -1,8 +1,12 @@
+use super::transaction::Transaction;
+use crate::gadgets::epoch_circuit::{generate_proof, EpochBalanceCircuit};
+use ark_bn254::{Bn254, Fr};
+use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
+use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
 use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
-
-use super::transaction::Transaction;
+use rand::rngs::OsRng;
 
 pub struct Organization<F: PrimeField> {
     // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
@@ -124,5 +128,50 @@ where
             addresses.push(address);
         }
         addresses
+    }
+    pub fn validate_components(&self, blockchain_keys: Vec<F>, blockchain_values: Vec<F>) {
+        let mut rng = OsRng;
+        println!(
+            "\x1b[32mValidating Organization: {}\x1b[0m",
+            self.identifier()
+        );
+        if !self.validate_transaction_serial_numbers(blockchain_keys) {
+            panic!(
+                "Could not validate {}'s spent transaction serial numbers",
+                self.identifier()
+            );
+        }
+        if !self.validate_transaction_roots(blockchain_values) {
+            panic!(
+                "Could not validate {}'s spent transaction Merkle tree root",
+                self.identifier()
+            );
+        }
+
+        let (proving_key, verifying_key) =
+            Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
+                EpochBalanceCircuit::<Fr>::new(
+                    self.initial_balance(),
+                    self.delta(),
+                    self.final_balance(),
+                ),
+                &mut rng,
+            )
+            .unwrap();
+        let proof = generate_proof(
+            self.initial_balance(),
+            self.delta(),
+            self.final_balance(),
+            &proving_key,
+        );
+
+        // Prepare the verifying key
+        let pvk = prepare_verifying_key(&verifying_key);
+
+        // Verify the proof
+        let is_valid =
+            Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &proof, &[]).unwrap();
+
+        println!("Proof is valid: {}", is_valid);
     }
 }
