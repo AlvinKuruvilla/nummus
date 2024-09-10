@@ -1,11 +1,17 @@
 use super::transaction::Transaction;
-use crate::gadgets::epoch_circuit::{generate_proof, EpochBalanceCircuit};
+use crate::{
+    gadgets::{
+        blockchain_validator::{blockchain_validator_generate_proof, BlockchainValidatorCircuit},
+        epoch_circuit::{generate_proof, EpochBalanceCircuit},
+    },
+    utils::{fpvars_to_u64s, prime_fields_to_u64s},
+};
 use ark_bn254::{Bn254, Fr};
 use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
-use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
-use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
+use ark_r1cs_std::fields::fp::FpVar;
+use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
 pub struct Organization<F: PrimeField> {
@@ -86,36 +92,6 @@ where
         self.has_address(t.sender_address().public_key())
             || self.has_address(t.receiver_address().public_key())
     }
-    pub fn validate_transaction_serial_numbers(&self, blockchain_serial_numbers: Vec<F>) -> bool {
-        let cs = ConstraintSystem::<F>::new_ref();
-        self.spent_serial_numbers.iter().all(|serial| {
-            blockchain_serial_numbers.iter().any(|blockchain_serial| {
-                let blockchain_serial_var =
-                    FpVar::new_input(cs.clone(), || Ok(blockchain_serial)).unwrap();
-                serial
-                    .is_eq(&blockchain_serial_var)
-                    .unwrap()
-                    .value()
-                    .unwrap_or(false)
-            })
-        })
-    }
-    pub fn validate_transaction_roots(&self, blockchain_transaction_roots: Vec<F>) -> bool {
-        let cs = ConstraintSystem::<F>::new_ref();
-        self.transaction_root_cache.iter().all(|t_root| {
-            blockchain_transaction_roots
-                .iter()
-                .any(|blockchan_transaction_root| {
-                    let blockchain_t_root_var =
-                        FpVar::new_input(cs.clone(), || Ok(blockchan_transaction_root)).unwrap();
-                    t_root
-                        .is_eq(&blockchain_t_root_var)
-                        .unwrap()
-                        .value()
-                        .unwrap_or(false)
-                })
-        })
-    }
     pub fn create_known_addresses(
         cs: ConstraintSystemRef<F>,
         num_addresses: usize,
@@ -135,18 +111,6 @@ where
             "\x1b[32mValidating Organization: {}\x1b[0m",
             self.identifier()
         );
-        if !self.validate_transaction_serial_numbers(blockchain_keys) {
-            panic!(
-                "Could not validate {}'s spent transaction serial numbers",
-                self.identifier()
-            );
-        }
-        if !self.validate_transaction_roots(blockchain_values) {
-            panic!(
-                "Could not validate {}'s spent transaction Merkle tree root",
-                self.identifier()
-            );
-        }
 
         let (proving_key, verifying_key) =
             Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
@@ -172,6 +136,53 @@ where
         let is_valid =
             Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &proof, &[]).unwrap();
 
-        println!("Proof is valid: {}", is_valid);
+        println!("Epoch Proof is valid: {}", is_valid);
+
+        let (proving_key, verifying_key) =
+            Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
+                BlockchainValidatorCircuit::new(
+                    prime_fields_to_u64s(blockchain_keys.clone()),
+                    prime_fields_to_u64s(blockchain_values.clone()),
+                    fpvars_to_u64s(self.transaction_root_cache.clone()),
+                    fpvars_to_u64s(self.spent_serial_numbers.clone()),
+                ),
+                &mut rng,
+            )
+            .unwrap();
+        let proof = blockchain_validator_generate_proof(
+            prime_fields_to_u64s(blockchain_keys.clone()),
+            prime_fields_to_u64s(blockchain_values.clone()),
+            fpvars_to_u64s(self.transaction_root_cache.clone()),
+            fpvars_to_u64s(self.spent_serial_numbers.clone()),
+            &proving_key,
+        );
+
+        // Prepare the verifying key
+        let pvk = prepare_verifying_key(&verifying_key);
+
+        // Verify the proof
+        let is_valid =
+            Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &proof, &[]).unwrap();
+        println!("Blockchain Proof is valid: {}", is_valid);
     }
+}
+pub fn validate_transaction_serial_numbers(
+    blockchain_serial_numbers: Vec<u64>,
+    spent_serial_numbers: Vec<u64>,
+) -> bool {
+    spent_serial_numbers.iter().all(|serial| {
+        blockchain_serial_numbers
+            .iter()
+            .any(|blockchain_serial| *serial == *blockchain_serial)
+    })
+}
+pub fn validate_transaction_roots(
+    blockchain_transaction_roots: Vec<u64>,
+    transaction_root_cache: Vec<u64>,
+) -> bool {
+    transaction_root_cache.iter().all(|t_root| {
+        blockchain_transaction_roots
+            .iter()
+            .any(|blockchain_transaction_root| *t_root == *blockchain_transaction_root)
+    })
 }
