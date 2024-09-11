@@ -36,10 +36,10 @@ fn bt_test() {
 
         // Generate random transaction data
         let tid = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
-        let sender_secret = i.to_string();
-        let receiver_secret = (i + 10).to_string();
-        // let sender_secret = FpVar::new_input(cs.clone(), || Ok(Fr::from(i))).unwrap();
-        // let receiver_secret = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
+        // let sender_secret = i.to_string();
+        // let receiver_secret = (i + 10).to_string();
+        let sender_secret = FpVar::new_input(cs.clone(), || Ok(Fr::from(i))).unwrap();
+        let receiver_secret = FpVar::new_input(cs.clone(), || Ok(Fr::from(i + 10))).unwrap();
         let sn_secret = FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap();
 
         // Create the original transaction
@@ -60,10 +60,10 @@ fn bt_test() {
         network.forward_transaction(t);
 
         println!("Nova::prove_step {}: {:?}", i, start.elapsed());
-        network.dump_network_info();
+        // network.dump_network_info();
         println!("Transferring deltas to org balance");
         network.transfer_delta_to_organization_balance();
-        network.dump_network_info();
+        // network.dump_network_info();
         network.validate_all_epoch_deltas_and_final_balances();
         network.clean_deltas_at_epoch_end();
     }
