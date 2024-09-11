@@ -10,14 +10,14 @@ use ark_bn254::{Bn254, Fr};
 use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
-use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
+use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
 pub struct Organization<F: PrimeField> {
     // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
     spent_serial_numbers: Vec<FpVar<F>>, // TODO: When using this we should have sanity checks that panic if repeats exist
-    used_address_public_keys: Vec<FpVar<F>>, // TODO: When using this we should have sanity checks that panic if repeats exist
+    used_address_public_keys: Vec<String>, // TODO: When using this we should have sanity checks that panic if repeats exist
     transaction_root_cache: Vec<FpVar<F>>,
     unique_identifier: String,
     _initial_balance: i32,
@@ -31,7 +31,7 @@ where
     pub fn new(
         unique_identifier: String,
         initial_balance: i32,
-        known_addresses: Vec<FpVar<F>>,
+        known_addresses: Vec<String>,
     ) -> Self {
         Self {
             spent_serial_numbers: Vec::new(),
@@ -44,7 +44,7 @@ where
             epoch_balance_delta: 0,
         }
     }
-    pub fn add_address_public_key(&mut self, address_public_key: FpVar<F>) {
+    pub fn add_address_public_key(&mut self, address_public_key: String) {
         self.used_address_public_keys.push(address_public_key);
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
@@ -79,16 +79,13 @@ where
         println!("========================");
         println!("Balance: {}", self.final_balance());
         println!("Epoch Delta: {}", self.epoch_balance_delta);
-        // println!("Known Addresses: {:?}", self.used_address_public_keys);
+        println!("Known Addresses: {:?}", self.used_address_public_keys);
         println!()
     }
-    pub fn has_address(&self, address_public_key: FpVar<F>) -> bool {
-        self.used_address_public_keys.iter().any(|key| {
-            key.is_eq(&address_public_key)
-                .unwrap()
-                .value()
-                .unwrap_or(false)
-        })
+    pub fn has_address(&self, address_public_key: String) -> bool {
+        self.used_address_public_keys
+            .iter()
+            .any(|key| *key == address_public_key)
     }
 
     pub fn is_involved(&self, t: &Transaction<F>) -> bool {
@@ -99,11 +96,11 @@ where
         cs: ConstraintSystemRef<F>,
         num_addresses: usize,
         offset: usize,
-    ) -> Vec<FpVar<F>> {
+    ) -> Vec<String> {
         let mut addresses = Vec::new();
         for i in 0..num_addresses {
-            // let address: String = (i + offset).to_string();
-            let address = FpVar::new_input(cs.clone(), || Ok(F::from(i as u64))).unwrap();
+            let address: String = (i + offset).to_string();
+            // let address = FpVar::new_input(cs.clone(), || Ok(F::from(i as u64))).unwrap();
             addresses.push(address);
         }
         addresses

@@ -8,35 +8,27 @@ use ark_r1cs_std::ToConstraintFieldGadget;
 use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystem;
 use ark_std::UniformRand;
-use ducat::{
-    ducat_types::{
-        address::Address, blockchain::Blockchain, org::Organization, transaction::Transaction,
-    },
-    utils::generate_random_in_range,
-};
+use ducat::ducat_types::{address::Address, blockchain::Blockchain, transaction::Transaction};
 use rand::Rng;
-
 use std::time::Instant;
+// Helper function to generate a random value in the specified range
+fn generate_random_in_range() -> Fr {
+    let mut rng = rand::thread_rng();
+    let ret = Fr::from(rng.gen_range(0..100));
+    println!("Generated random serial number secret: {:?}", ret);
+    ret
+}
 fn bt_test() {
     let mut blockchain = Blockchain::default();
-    let cs = ConstraintSystem::<Fr>::new_ref();
     let mut rng = ark_std::test_rng();
-    let mut org1 = Organization::new(
-        "org1".to_string(),
-        20,
-        Organization::create_known_addresses(cs.clone(), 5, 0),
-    );
-    let mut org2 = Organization::new(
-        "org2".to_string(),
-        30,
-        Organization::create_known_addresses(cs.clone(), 5, 10),
-    );
+
     for i in 1..5 {
         let start = Instant::now();
         let cs = ConstraintSystem::<Fr>::new_ref();
 
         // Generate random transaction data
         let tid = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
+        let value = FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap();
         let sender_secret = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
         let receiver_secret = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
         let sn_secret = FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap();
@@ -44,20 +36,43 @@ fn bt_test() {
         // Create the original transaction
         let t = Transaction::new(
             tid,
-            rand::thread_rng().gen_range(0..100),
+            value.clone(),
             sender_secret.clone(),
             receiver_secret.clone(),
             sn_secret.clone(), // Clone the serial number secret for later use
         );
-        // TODO: Appending to the address_public_key cache isn't great. Rather we should have some sort of forwarding method that sends all transactions to all
-        // organizations for them to check the sender and receiver address against their existing set of addresses.
-        org1.add_address_public_key(t.sender_address().public_key());
-        org1.add_serial_number(t.serial_number());
-        org2.add_address_public_key(t.receiver_address().public_key());
         blockchain.append_transaction(t.root(), t.serial_number());
         println!("Nova::prove_step {}: {:?}", i, start.elapsed());
     }
     blockchain.dump_transactions();
+    let cs = ConstraintSystem::<Fr>::new_ref();
+    let tid = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
+    let value = FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap();
+    let sender_secret = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
+    let receiver_secret = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
+    let sn_secret = FpVar::new_input(cs.clone(), || Ok(Fr::from(110))).unwrap();
+
+    let extra_tx = Transaction::new(
+        tid.clone(),
+        value.clone(),
+        sender_secret.clone(),
+        receiver_secret.clone(),
+        sn_secret.clone(),
+    );
+
+    blockchain.append_transaction(extra_tx.root(), extra_tx.serial_number());
+
+    let dupe_tx = Transaction::new(
+        tid,
+        value,
+        sender_secret.clone(),
+        receiver_secret.clone(),
+        sn_secret.clone(), // Deliberately reuse the same serial number secret to trigger the expected panic
+    );
+    blockchain.append_transaction(dupe_tx.root(), dupe_tx.serial_number());
+    println!(
+        "This line should not be reached if the duplicate serial number check works correctly."
+    );
 }
 fn bt_test_with_split_transactions() {
     let mut blockchain = Blockchain::default();
@@ -69,6 +84,7 @@ fn bt_test_with_split_transactions() {
 
         // Generate random transaction data
         let tid = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
+        let value = FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap();
         let sender_secret = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
         let receiver_secret_1 = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
         let receiver_secret_2 = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
@@ -77,7 +93,7 @@ fn bt_test_with_split_transactions() {
         // Create the original transaction
         let t = Transaction::new(
             tid,
-            rand::thread_rng().gen_range(0..100),
+            value.clone(),
             sender_secret.clone(),
             receiver_secret_1.clone(),
             sn_secret.clone(), // Clone the serial number secret for later use
@@ -85,8 +101,8 @@ fn bt_test_with_split_transactions() {
 
         // Define the split values and new receiver addresses
         let split_values = vec![
-            rand::thread_rng().gen_range(0..100),
-            rand::thread_rng().gen_range(0..100),
+            FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap(),
+            FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap(),
         ];
         let new_receiver_addresses = vec![
             Address::new(receiver_secret_1.clone()),
