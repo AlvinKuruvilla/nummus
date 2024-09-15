@@ -5,7 +5,7 @@ use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystem;
 use ark_std::UniformRand;
 use ducat::{
-    ducat_types::{network::Network, org::Organization, transaction::Transaction},
+    core::{network::Network, org::Organization, transaction::Transaction},
     utils::generate_random_in_range,
 };
 use rand::Rng;

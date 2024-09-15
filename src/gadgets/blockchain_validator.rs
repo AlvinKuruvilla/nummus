@@ -4,7 +4,7 @@ use ark_groth16::{r1cs_to_qap::LibsnarkReduction, Groth16, Proof, ProvingKey};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use rand::rngs::OsRng;
 
-use crate::ducat_types::org::{validate_transaction_roots, validate_transaction_serial_numbers};
+use crate::core::org::{validate_transaction_roots, validate_transaction_serial_numbers};
 
 pub struct BlockchainValidatorCircuit {
     pub blockchain_sns: Vec<u64>,         // serial numbers

@@ -8,7 +8,7 @@ use ark_r1cs_std::ToConstraintFieldGadget;
 use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystem;
 use ark_std::UniformRand;
-use ducat::ducat_types::{address::Address, blockchain::Blockchain, transaction::Transaction};
+use ducat::core::{address::Address, blockchain::Blockchain, transaction::Transaction};
 use rand::Rng;
 use std::time::Instant;
 // Helper function to generate a random value in the specified range
