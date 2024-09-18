@@ -1,6 +1,8 @@
 use ark_ff::PrimeField;
 use std::collections::HashMap;
 
+use crate::utils::fpvars_to_u64s;
+
 use super::{blockchain::Blockchain, org::Organization, transaction::Transaction};
 
 pub struct Network<F: PrimeField> {
@@ -79,6 +81,16 @@ where
 
         for org in self.organizations.values_mut() {
             org.validate_components(blockchain_keys.clone(), blockchain_values.clone())
+        }
+    }
+    pub fn validate_all_assets(&mut self) {
+        let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
+        for org in self.organizations.values_mut() {
+            println!("Validating assets for org: {:?}", org.identifier());
+            org.validate_assets(
+                blockchain_keys.clone(),
+                fpvars_to_u64s(org.serial_numbers()),
+            );
         }
     }
 }

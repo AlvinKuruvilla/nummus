@@ -1,6 +1,7 @@
 use super::transaction::Transaction;
 use crate::{
     gadgets::{
+        asset_proof::{count_occurrences, generate_asset_proof, AssetProof},
         blockchain_validator::{blockchain_validator_generate_proof, BlockchainValidatorCircuit},
         epoch_circuit::{generate_proof, EpochBalanceCircuit},
     },
@@ -49,6 +50,9 @@ where
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
         self.spent_serial_numbers.push(sn);
+    }
+    pub fn serial_numbers(&self) -> Vec<FpVar<F>> {
+        self.spent_serial_numbers.clone()
     }
     pub fn add_root(&mut self, root: FpVar<F>) {
         self.transaction_root_cache.push(root);
@@ -164,6 +168,42 @@ where
         let is_valid =
             Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &proof, &[]).unwrap();
         println!("Blockchain Proof is valid: {}", is_valid);
+    }
+
+    pub fn validate_assets(&self, blockchain_keys: Vec<F>, spent_serial_numbers: Vec<u64>) {
+        let mut rng = OsRng;
+        let occurrences: Vec<u32> = count_occurrences(
+            spent_serial_numbers.clone(),
+            prime_fields_to_u64s(blockchain_keys.clone()),
+        )
+        .values()
+        .copied()
+        .collect();
+        let (proving_key, verifying_key) =
+            Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
+                AssetProof::new(
+                    5,
+                    occurrences.clone(),
+                    prime_fields_to_u64s(blockchain_keys.clone()),
+                    spent_serial_numbers.clone(),
+                ),
+                &mut rng,
+            )
+            .unwrap();
+        let asset_proof = generate_asset_proof(
+            5,
+            spent_serial_numbers.clone(),
+            prime_fields_to_u64s(blockchain_keys.clone()),
+            occurrences,
+            &proving_key,
+        );
+        // Prepare the verifying key
+        let pvk = prepare_verifying_key(&verifying_key);
+
+        // Verify the proof
+        let is_valid =
+            Groth16::<Bn254, LibsnarkReduction>::verify_proof(&pvk, &asset_proof, &[]).unwrap();
+        println!("Asset Proof is valid: {}", is_valid);
     }
 }
 pub fn validate_transaction_serial_numbers(

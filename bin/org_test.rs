@@ -65,6 +65,7 @@ fn bt_test() {
         network.transfer_delta_to_organization_balance();
         network.dump_network_info();
         network.validate_all_epoch_deltas_and_final_balances();
+        network.validate_all_assets();
         network.clean_deltas_at_epoch_end();
     }
 }
