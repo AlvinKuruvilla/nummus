@@ -173,12 +173,13 @@ where
     pub fn validate_assets(&self, blockchain_keys: Vec<F>, spent_serial_numbers: Vec<u64>) {
         let mut rng = OsRng;
         let occurrences: Vec<u32> = count_occurrences(
-            spent_serial_numbers.clone(),
             prime_fields_to_u64s(blockchain_keys.clone()),
+            spent_serial_numbers.clone(),
         )
         .values()
         .copied()
         .collect();
+        println!("occurrences: {:?}", occurrences);
         let (proving_key, verifying_key) =
             Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
                 AssetProof::new(
