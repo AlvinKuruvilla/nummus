@@ -9,30 +9,29 @@ use ducat::{
     utils::generate_random_in_range,
 };
 use rand::Rng;
-
 fn bt_test() {
     let mut rng = ark_std::test_rng();
     let cs = ConstraintSystem::<Fr>::new_ref();
 
-    // Create known addresses for testing
-
     // Create and add organizations to the network
     let mut network = Network::<Fr>::new();
-    let org1 = Organization::new(
-        "org1".to_string(),
-        20,
-        Organization::create_known_addresses(cs.clone(), 5, 0),
-    );
-    let org2 = Organization::new(
-        "org2".to_string(),
-        30,
-        Organization::create_known_addresses(cs.clone(), 5, 10),
-    );
-    network.add_organization(org1);
-    network.add_organization(org2);
 
-    for i in 1..2 {
+    for i in 1..3 {
         let start = Instant::now();
+        // Organization setup
+        // TODO: At the beginning of each new epoch should we change something about the organization's initial balances or their addresses?
+        let org1 = Organization::new(
+            "org1".to_string(),
+            20,
+            Organization::create_known_addresses(cs.clone(), 5, 0),
+        );
+        let org2 = Organization::new(
+            "org2".to_string(),
+            30,
+            Organization::create_known_addresses(cs.clone(), 5, 10),
+        );
+        network.add_organization(org1);
+        network.add_organization(org2);
 
         // Generate random transaction data
         let tid = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
@@ -66,7 +65,7 @@ fn bt_test() {
         network.dump_network_info();
         network.validate_all_epoch_deltas_and_final_balances();
         network.validate_all_assets();
-        network.clean_deltas_at_epoch_end();
+        network.clean_deltas_and_balances_at_epoch_end();
     }
 }
 pub fn main() {
