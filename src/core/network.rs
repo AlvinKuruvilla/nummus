@@ -65,9 +65,10 @@ where
             org.dump_info();
         }
     }
-    pub fn clean_deltas_at_epoch_end(&mut self) {
+    pub fn clean_deltas_and_balances_at_epoch_end(&mut self) {
         for org in self.organizations.values_mut() {
             org.clear_delta();
+            org.clear_final_balance();
         }
     }
     pub fn transfer_delta_to_organization_balance(&mut self) {
