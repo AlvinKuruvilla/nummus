@@ -1,5 +1,6 @@
 use super::transaction::Transaction;
 use crate::{
+    core::fiat_transform::generate_alpha,
     gadgets::{
         asset_proof::{count_occurrences, generate_asset_proof, AssetProof},
         blockchain_validator::{blockchain_validator_generate_proof, BlockchainValidatorCircuit},
@@ -174,7 +175,12 @@ where
         println!("Blockchain Proof is valid: {}", is_valid);
     }
 
-    pub fn validate_assets(&self, blockchain_keys: Vec<F>, spent_serial_numbers: Vec<u64>) {
+    pub fn validate_assets(
+        &self,
+        blockchain_keys: Vec<F>,
+        spent_serial_numbers: Vec<u64>,
+        blockchain_values: Vec<F>,
+    ) {
         let mut rng = OsRng;
         let occurrences: Vec<u32> = count_occurrences(
             prime_fields_to_u64s(blockchain_keys.clone()),
@@ -186,8 +192,10 @@ where
         println!("occurrences: {:?}", occurrences);
         let (proving_key, verifying_key) =
             Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
+                // TODO: Instead of using a fixed alpha value, we should the root commitment and Poseidon hash
+                //       it to get the actual alpha value.
                 AssetProof::new(
-                    5,
+                    generate_alpha(blockchain_values),
                     occurrences.clone(),
                     prime_fields_to_u64s(blockchain_keys.clone()),
                     spent_serial_numbers.clone(),

@@ -17,6 +17,8 @@ rand = "0.8.5"
 rs_merkle = "1.4.2"
 ark-relations = "0.4.0"
 ark-groth16 = "0.4.0"
+dusk-poseidon = "0.40.0"
+dusk-bls12_381 = { version = "0.13.0" }
 [[example]]
 name = "bt"
 path = "bin/bt.rs"

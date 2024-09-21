@@ -86,11 +86,13 @@ where
     }
     pub fn validate_all_assets(&mut self) {
         let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
+        let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
         for org in self.organizations.values_mut() {
             println!("Validating assets for org: {:?}", org.identifier());
             org.validate_assets(
                 blockchain_keys.clone(),
                 fpvars_to_u64s(org.serial_numbers()),
+                blockchain_values.clone(),
             );
         }
     }
