@@ -6,6 +6,7 @@ use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
 type ROOT<F> = F;
 type SN<F> = F;
 
+#[derive(Clone)]
 pub struct Blockchain<F: PrimeField> {
     inner: HashMap<SN<F>, ROOT<F>>, // Use HashMap with serial numbers as keys
 }

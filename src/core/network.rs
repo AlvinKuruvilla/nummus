@@ -5,6 +5,8 @@ use crate::utils::fpvars_to_u64s;
 
 use super::{blockchain::Blockchain, org::Organization, transaction::Transaction};
 
+/// The `Network` type is a abstract representation of a cryptocurrency exchange (like FTX or Binance)
+#[derive(Clone)]
 pub struct Network<F: PrimeField> {
     organizations: HashMap<String, Organization<F>>, // Maps organization names to their instances
     blockchain: Blockchain<F>,                       // The blockchain where transactions are stored
@@ -30,6 +32,7 @@ where
     }
 
     pub fn add_organization(&mut self, org: Organization<F>) {
+        // TODO: How does this handle a repeat key? For right now it should panic if there is a repeat
         self.organizations.insert(org.identifier().clone(), org);
     }
 

@@ -8,7 +8,7 @@ use rand::Rng;
 pub fn generate_random_in_range() -> Fr {
     let mut rng = rand::thread_rng();
     let ret = Fr::from(rng.gen_range(0..100));
-    // println!("Generated random serial number secret: {:?}", ret);
+    println!("Generated random serial number secret: {:?}", ret);
     ret
 }
 /// Convert a string to a field element `F`.

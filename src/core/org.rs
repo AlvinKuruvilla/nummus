@@ -16,6 +16,7 @@ use ark_r1cs_std::{eq::EqGadget, fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
+#[derive(Clone)]
 pub struct Organization<F: PrimeField> {
     // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
     spent_serial_numbers: Vec<FpVar<F>>,
@@ -51,17 +52,16 @@ where
             self.used_address_public_keys.push(address_public_key);
         } else {
             panic!(
-                "Repeat sn {:?} added to spent_serial_numbers",
+                "Repeat address public key {:?} added to used_address_public_keys",
                 address_public_key
             );
         }
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
-        if !self.has_serial_number(sn.clone()) {
-            self.spent_serial_numbers.push(sn);
-        } else {
-            panic!("Repeat sn {:?} added to spent_serial_numbers", sn);
+        if self.has_serial_number(sn.clone()) {
+            panic!("Repeat sn added to spent_serial_numbers");
         }
+        self.spent_serial_numbers.push(sn);
     }
     pub fn serial_numbers(&self) -> Vec<FpVar<F>> {
         self.spent_serial_numbers.clone()
