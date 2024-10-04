@@ -12,14 +12,14 @@ use ark_bn254::{Bn254, Fr};
 use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
-use ark_r1cs_std::fields::fp::FpVar;
+use ark_r1cs_std::{eq::EqGadget, fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
 pub struct Organization<F: PrimeField> {
     // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
-    spent_serial_numbers: Vec<FpVar<F>>, // TODO: When using this we should have sanity checks that panic if repeats exist
-    used_address_public_keys: Vec<String>, // TODO: When using this we should have sanity checks that panic if repeats exist
+    spent_serial_numbers: Vec<FpVar<F>>,
+    used_address_public_keys: Vec<String>,
     transaction_root_cache: Vec<FpVar<F>>,
     unique_identifier: String,
     _initial_balance: i32,
@@ -47,10 +47,21 @@ where
         }
     }
     pub fn add_address_public_key(&mut self, address_public_key: String) {
-        self.used_address_public_keys.push(address_public_key);
+        if !self.has_address(address_public_key.clone()) {
+            self.used_address_public_keys.push(address_public_key);
+        } else {
+            panic!(
+                "Repeat sn {:?} added to spent_serial_numbers",
+                address_public_key
+            );
+        }
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
-        self.spent_serial_numbers.push(sn);
+        if !self.has_serial_number(sn.clone()) {
+            self.spent_serial_numbers.push(sn);
+        } else {
+            panic!("Repeat sn {:?} added to spent_serial_numbers", sn);
+        }
     }
     pub fn serial_numbers(&self) -> Vec<FpVar<F>> {
         self.spent_serial_numbers.clone()
@@ -95,6 +106,11 @@ where
         self.used_address_public_keys
             .iter()
             .any(|key| *key == address_public_key)
+    }
+    pub fn has_serial_number(&self, sn: FpVar<F>) -> bool {
+        self.spent_serial_numbers
+            .iter()
+            .any(|key| key.is_eq(&sn).unwrap().value().unwrap())
     }
 
     pub fn is_involved(&self, t: &Transaction<F>) -> bool {
@@ -192,8 +208,6 @@ where
         println!("occurrences: {:?}", occurrences);
         let (proving_key, verifying_key) =
             Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
-                // TODO: Instead of using a fixed alpha value, we should the root commitment and Poseidon hash
-                //       it to get the actual alpha value.
                 AssetProof::new(
                     generate_alpha(blockchain_values),
                     occurrences.clone(),

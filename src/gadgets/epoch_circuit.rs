@@ -25,7 +25,6 @@ impl<F: Field> EpochBalanceCircuit<F> {
 }
 
 impl<F: Field> ConstraintSynthesizer<F> for EpochBalanceCircuit<F> {
-    // TODO: What do we want to actually validate here?
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         let sum = self.initial_balance + self.epoch_delta;
         println!("Initial Balance in circuit: {}", self.initial_balance);
