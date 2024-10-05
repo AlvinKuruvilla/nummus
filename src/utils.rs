@@ -7,7 +7,7 @@ use rand::Rng;
 // Helper function to generate a random value in the specified range
 pub fn generate_random_in_range() -> Fr {
     let mut rng = rand::thread_rng();
-    let ret = Fr::from(rng.gen_range(0..100));
+    let ret = Fr::from(rng.gen_range(0..1000));
     println!("Generated random serial number secret: {:?}", ret);
     ret
 }

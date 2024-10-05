@@ -63,6 +63,9 @@ where
         }
         self.spent_serial_numbers.push(sn);
     }
+    pub fn known_addresses(&self) -> Vec<String> {
+        self.used_address_public_keys.clone()
+    }
     pub fn serial_numbers(&self) -> Vec<FpVar<F>> {
         self.spent_serial_numbers.clone()
     }
@@ -124,8 +127,8 @@ where
     ) -> Vec<String> {
         let mut addresses = Vec::new();
         for i in 0..num_addresses {
-            let address: String = (i + offset).to_string();
             // let address = FpVar::new_input(cs.clone(), || Ok(F::from(i as u64))).unwrap();
+            let address = format!("{}", i + offset); // More descriptive format
             addresses.push(address);
         }
         addresses
