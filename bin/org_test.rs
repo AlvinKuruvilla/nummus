@@ -6,7 +6,7 @@ use ducat::{
     core::{network::Network, org::Organization, run_config::RUN_CONFIG, transaction::Transaction},
     utils::generate_random_in_range,
 };
-use rand::{seq::SliceRandom, Rng};
+use rand::{seq::IteratorRandom, Rng};
 use std::time::Instant;
 
 pub fn main() {
@@ -31,7 +31,11 @@ pub fn main() {
             RUN_CONFIG.addresses_per_organization,
             i * RUN_CONFIG.addresses_per_organization,
         );
-        let organization = Organization::new(org_name.clone(), initial_balance, addresses);
+        let organization = Organization::new(
+            org_name.clone(),
+            initial_balance,
+            addresses.iter().cloned().collect(),
+        );
         organizations.push(organization.clone()); // Store organization for later access
         network.add_organization(organization);
     }
@@ -53,27 +57,29 @@ pub fn main() {
 
         // Select random addresses from the organizations
         let sender_address = organizations[sender_index]
-            .known_addresses()
+            .known_addresses() // Returns a `&HashSet<String>`
+            .iter() // Create an iterator over the addresses
             .choose(&mut rng)
-            .unwrap()
-            .clone();
+            .cloned()
+            .unwrap();
         let receiver_address = organizations[receiver_index]
-            .known_addresses()
+            .known_addresses() // Returns a `&HashSet<String>`
+            .iter() // Create an iterator over the addresses
             .choose(&mut rng)
-            .unwrap()
-            .clone();
+            .cloned()
+            .unwrap();
         let sn_secret = FpVar::new_input(cs.clone(), || Ok(generate_random_in_range())).unwrap();
 
         // Create the transaction
         let value = rand::thread_rng().gen_range(0..100);
         let transaction = Transaction::new(tid, value, sender_address, receiver_address, sn_secret);
 
-        println!(
-            "Forwarding transaction of value: {} from sender: {:?} to receiver: {:?}",
-            transaction.value(),
-            transaction.sender_address(),
-            transaction.receiver_address()
-        );
+        // println!(
+        //     "Forwarding transaction of value: {} from sender: {:?} to receiver: {:?}",
+        //     transaction.value(),
+        //     transaction.sender_address(),
+        //     transaction.receiver_address()
+        // );
 
         // Forward the transaction to the network
         network.forward_transaction(transaction);

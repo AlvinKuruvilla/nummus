@@ -25,7 +25,7 @@ where
         // Convert FpVar<F> to concrete values
         let root_value = root.value().unwrap();
         let sn_value = serial_number.value().unwrap();
-        println!("Serial number of new transaction: {:?}", sn_value.clone());
+        // println!("Serial number of new transaction: {:?}", sn_value.clone());
         // Check if the serial number is already in the HashMap
         if self.inner.contains_key(&sn_value) {
             panic!("The serial number is already in the blockchain!");

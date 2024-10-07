@@ -1,3 +1,5 @@
+use std::collections::{HashSet, VecDeque};
+
 use super::transaction::Transaction;
 use crate::{
     core::fiat_transform::generate_alpha,
@@ -19,9 +21,9 @@ use rand::rngs::OsRng;
 #[derive(Clone)]
 pub struct Organization<F: PrimeField> {
     // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
-    spent_serial_numbers: Vec<FpVar<F>>,
-    used_address_public_keys: Vec<String>,
-    transaction_root_cache: Vec<FpVar<F>>,
+    spent_serial_numbers: VecDeque<FpVar<F>>,
+    used_address_public_keys: HashSet<String>,
+    transaction_root_cache: VecDeque<FpVar<F>>,
     unique_identifier: String,
     _initial_balance: i32,
     final_balance: i32,
@@ -34,13 +36,13 @@ where
     pub fn new(
         unique_identifier: String,
         initial_balance: i32,
-        known_addresses: Vec<String>,
+        known_addresses: HashSet<String>,
     ) -> Self {
         Self {
-            spent_serial_numbers: Vec::new(),
+            spent_serial_numbers: VecDeque::new(),
             used_address_public_keys: known_addresses,
             unique_identifier,
-            transaction_root_cache: Vec::new(),
+            transaction_root_cache: VecDeque::new(),
             // NOTE: this field should not be directly accessed or mutated. There is a getter provided to retrieve the value
             _initial_balance: initial_balance,
             final_balance: initial_balance,
@@ -49,7 +51,7 @@ where
     }
     pub fn add_address_public_key(&mut self, address_public_key: String) {
         if !self.has_address(address_public_key.clone()) {
-            self.used_address_public_keys.push(address_public_key);
+            self.used_address_public_keys.insert(address_public_key);
         } else {
             panic!(
                 "Repeat address public key {:?} added to used_address_public_keys",
@@ -61,16 +63,16 @@ where
         if self.has_serial_number(sn.clone()) {
             panic!("Repeat sn added to spent_serial_numbers");
         }
-        self.spent_serial_numbers.push(sn);
+        self.spent_serial_numbers.push_back(sn);
     }
-    pub fn known_addresses(&self) -> Vec<String> {
+    pub fn known_addresses(&self) -> HashSet<String> {
         self.used_address_public_keys.clone()
     }
-    pub fn serial_numbers(&self) -> Vec<FpVar<F>> {
+    pub fn serial_numbers(&self) -> VecDeque<FpVar<F>> {
         self.spent_serial_numbers.clone()
     }
     pub fn add_root(&mut self, root: FpVar<F>) {
-        self.transaction_root_cache.push(root);
+        self.transaction_root_cache.push_back(root);
     }
     pub fn clear_delta(&mut self) {
         self.epoch_balance_delta = 0;

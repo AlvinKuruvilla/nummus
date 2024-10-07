@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use ark_bn254::Fr;
 use ark_ff::{BigInteger, PrimeField};
 use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar, R1CSVar};
@@ -74,7 +76,7 @@ pub fn prime_fields_to_u64s<F: PrimeField>(field_elements: Vec<F>) -> Vec<u64> {
         .map(|fe| prime_field_to_u64(fe).unwrap()) // Apply and unwrap, panic on None
         .collect() // Collect the results into a new vector
 }
-pub fn fpvars_to_u64s<F: PrimeField>(field_elements: Vec<FpVar<F>>) -> Vec<u64> {
+pub fn fpvars_to_u64s<F: PrimeField>(field_elements: VecDeque<FpVar<F>>) -> Vec<u64> {
     field_elements
         .into_iter() // Create an iterator over the vector elements
         .map(|fe| fpvar_to_u64(&fe).unwrap()) // Apply and unwrap, panic on None
