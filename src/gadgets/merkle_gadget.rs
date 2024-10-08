@@ -26,16 +26,23 @@ impl MerkleTreeGadget {
         leaves: Vec<FpVar<F>>,
         cs: ConstraintSystemRef<F>,
     ) -> FpVar<F> {
-        // Use a dummy constraint system to hash the leaf values
-        let mut leaf_hashes: Vec<[u8; 32]> = vec![];
+        // Pre-allocate memory for the leaf hashes vector
+        let mut leaf_hashes: Vec<[u8; 32]> = Vec::with_capacity(leaves.len());
 
         for leaf in leaves.iter() {
             let bytes = leaf.to_bytes().unwrap();
-            let bytes_converted: Vec<u8> = bytes.iter().map(|byte| byte.value().unwrap()).collect();
             let mut hash_input = [0u8; 32];
-            hash_input[..bytes_converted.len()].copy_from_slice(&bytes_converted);
+
+            // Directly copy bytes into the hash_input array, avoiding intermediate Vec<u8>
+            for (i, byte) in bytes.iter().enumerate() {
+                hash_input[i] = byte.value().unwrap();
+            }
+
+            // Compute the hash and push it to the pre-allocated vector
             let hash = Sha256::hash(&hash_input);
-            leaf_hashes.push(hash);
+            let mut hash_array = [0u8; 32];
+            hash_array.copy_from_slice(&hash);
+            leaf_hashes.push(hash_array);
         }
 
         // Create the Merkle tree from leaf hashes
