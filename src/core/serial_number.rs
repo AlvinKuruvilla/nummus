@@ -19,16 +19,18 @@ where
     F: PrimeField,
 {
     pub fn new(p: FpVar<F>) -> Self {
-        let mut holder = vec![];
-        let unit_var: UnitVar<F> = UnitVar::default();
-        holder.extend_from_slice(&p.to_bytes().unwrap());
+        // Use a buffer array instead of a dynamic vector to avoid multiple allocations
+        let bytes = p.to_bytes().unwrap();
 
-        let sn = Sha256Gadget::evaluate(&unit_var, &holder)
+        // Avoid allocating a vector, directly use the bytes array
+        let unit_var: UnitVar<F> = UnitVar::default();
+        let sn = Sha256Gadget::evaluate(&unit_var, &bytes)
             .unwrap()
             .0
             .to_constraint_field()
             .unwrap()[0]
             .clone();
+
         Self { value: sn }
     }
     pub fn sn(&self) -> FpVar<F> {
