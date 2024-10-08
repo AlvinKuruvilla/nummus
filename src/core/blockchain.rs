@@ -8,7 +8,7 @@ type SN<F> = F;
 
 #[derive(Clone)]
 pub struct Blockchain<F: PrimeField> {
-    inner: HashMap<SN<F>, ROOT<F>>, // Use HashMap with serial numbers as keys
+    inner: HashMap<SN<F>, ROOT<F>>,
 }
 
 impl<F> Blockchain<F>

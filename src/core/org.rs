@@ -126,12 +126,12 @@ where
         cs: ConstraintSystemRef<F>,
         num_addresses: usize,
         offset: usize,
-    ) -> Vec<String> {
-        let mut addresses = Vec::new();
+    ) -> HashSet<String> {
+        let mut addresses = HashSet::new();
         for i in 0..num_addresses {
             // let address = FpVar::new_input(cs.clone(), || Ok(F::from(i as u64))).unwrap();
             let address = format!("{}", i + offset); // More descriptive format
-            addresses.push(address);
+            addresses.insert(address);
         }
         addresses
     }
