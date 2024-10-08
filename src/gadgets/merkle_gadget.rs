@@ -89,32 +89,47 @@ impl MerkleTreeGadget {
         cs: ConstraintSystemRef<F>,
         indices_to_prove: Vec<usize>,
     ) -> bool {
-        let tree = Self::create_merkle_tree(leaves.to_vec(), cs);
-        let mut leaf_hashes: Vec<[u8; 32]> = vec![];
+        // Pre-allocate memory for the leaf hashes
+        let mut leaf_hashes: Vec<[u8; 32]> = Vec::with_capacity(leaves.len());
 
+        // Compute leaf hashes once and store them for both tree creation and proof validation
         for leaf in leaves.iter() {
             let bytes = leaf.to_bytes().unwrap();
-            let bytes_converted: Vec<u8> = bytes.iter().map(|byte| byte.value().unwrap()).collect();
             let mut hash_input = [0u8; 32];
-            hash_input[..bytes_converted.len()].copy_from_slice(&bytes_converted);
+
+            // Directly copy bytes into the hash_input array
+            for (i, byte) in bytes.iter().enumerate() {
+                hash_input[i] = byte.value().unwrap();
+            }
+
+            // Compute the hash and push it to the pre-allocated vector
             let hash = Sha256::hash(&hash_input);
-            leaf_hashes.push(hash);
+            let mut hash_array = [0u8; 32];
+            hash_array.copy_from_slice(&hash);
+            leaf_hashes.push(hash_array);
         }
 
+        // Create the Merkle tree from the pre-computed leaf hashes
+        let tree = MerkleTree::<Sha256>::from_leaves(&leaf_hashes);
+
+        // Collect the leaves that need to be proven
         let leaves_to_prove: Vec<_> = indices_to_prove
             .iter()
             .filter_map(|&i| leaf_hashes.get(i))
             .cloned() // Clone the values if necessary
             .collect();
 
+        // Generate the Merkle proof
         let merkle_proof = tree.proof(&indices_to_prove);
         let merkle_root = tree.root().unwrap();
-        // println!("Merkle root: {:?}", merkle_root);
+
         // Serialize proof to pass it to the client
         let proof_bytes = merkle_proof.to_bytes();
 
         // Parse proof back on the client
         let proof = MerkleProof::<Sha256>::try_from(proof_bytes).unwrap();
+
+        // Verify the proof
         let ret = proof.verify(
             merkle_root,
             &indices_to_prove,
