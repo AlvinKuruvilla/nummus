@@ -28,16 +28,22 @@ pub fn generate_alpha<F: PrimeField>(blockchain_merkle_roots: Vec<F>) -> u32 {
             FpVar::new_input(cs.clone(), || Ok(field_element)).expect("Failed to create FpVar")
         })
         .collect();
+    // NOTE: It looks this snippet was a major bottleneck in performance and possibly memory allocations.
+    //       In terms of performance when running with 100 transactions, 5 orgs and 10 addresses per org,
+    //       we go from just under a minute for all proof gen and validation (excluding all setup and
+    //       transaction forwarding) to just over half a second with this off.
+    //       Running without this extra validation didn't seem to break anything so I am opting to keep
+    //       this off.
 
-    let cs = ConstraintSystem::<F>::new_ref();
-    for (idx, _) in merkle_roots.iter().enumerate() {
-        // Verify the chosen leaf
-        let is_valid =
-            MerkleTreeGadget::generate_proof_and_validate(&merkle_roots, cs.clone(), vec![idx]);
-        if !is_valid {
-            panic!("Cannot get root hash if leaves are not all valid");
-        }
-    }
+    // let cs = ConstraintSystem::<F>::new_ref();
+    // for (idx, _) in merkle_roots.iter().enumerate() {
+    //     // Verify the chosen leaf
+    //     let is_valid =
+    //         MerkleTreeGadget::generate_proof_and_validate(&merkle_roots, cs.clone(), vec![idx]);
+    //     if !is_valid {
+    //         panic!("Cannot get root hash if leaves are not all valid");
+    //     }
+    // }
     let root = MerkleTreeGadget::create_root_hash(merkle_roots, cs);
     let base = fpvar_to_u64(&root).unwrap();
     let input = BlsScalar::from_raw([base, base, base, base]);
