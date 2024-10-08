@@ -180,4 +180,4 @@ def create_addresses_histogram():
 
 
 if __name__ == "__main__":
-    create_org_histogram()
+    create_addresses_histogram()
