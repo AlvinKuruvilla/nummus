@@ -37,30 +37,37 @@ where
     }
 
     pub fn forward_transaction(&mut self, t: Transaction<F>) {
+        let sender_key = t.sender_address().public_key();
+        let receiver_key = t.receiver_address().public_key();
+        let serial_number = t.serial_number();
+        let root = t.root();
+        let value = t.value();
+
         // Forward the transaction to all organizations
         for org in self.organizations.values_mut() {
             if org.is_involved(&t) {
-                // I don't think an org needs to do this since they should the address already in their cache
-                // Add public keys and serial numbers if they match this organization's records
-                // org.add_address_public_key(t.sender_address().public_key());
+                // Check if the organization has either the sender or receiver address
+                let has_receiver = org.has_address(receiver_key.clone());
+                let has_sender = org.has_address(sender_key.clone());
 
-                // Update balances accordingly
-                if org.has_address(t.receiver_address().public_key()) {
-                    org.add_serial_number(t.serial_number());
-                    org.update_delta(t.value());
-                    org.add_root(t.root());
+                if has_receiver {
+                    org.add_serial_number(serial_number.clone());
+                    org.update_delta(value);
                 }
-                if org.has_address(t.sender_address().public_key()) {
-                    org.add_serial_number(t.serial_number());
-                    org.update_delta(-t.value());
-                    org.add_root(t.root());
+                if has_sender {
+                    org.add_serial_number(serial_number.clone());
+                    org.update_delta(-value);
+                }
+
+                // Add the root only once if either receiver or sender is involved
+                if has_receiver || has_sender {
+                    org.add_root(root.clone());
                 }
             }
         }
 
         // Add the transaction to the blockchain
-        self.blockchain
-            .append_transaction(t.root(), t.serial_number());
+        self.blockchain.append_transaction(root, serial_number);
     }
 
     pub fn dump_network_info(&self) {
