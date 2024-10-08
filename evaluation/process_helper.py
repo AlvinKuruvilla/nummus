@@ -21,7 +21,13 @@ def extract_time(nova_string: str) -> float:
     # Use a regular expression to find the time value
     prefix = "Nova::prove_step: "
     print(nova_string[len(prefix) : -1])
-    return float(nova_string[len(prefix) : -1])
+    try:
+        return float(nova_string[len(prefix) : -1])
+    except ValueError:
+        # This hopefully only triggers when the proof time is in milliseconds
+        # so we can just remove an extra character.
+        # We have to divide by 1000 here because we know the time is in ms
+        return float(nova_string[len(prefix) : -2]) / 1000
 
 
 def modify_key(key: ConfigKey, new_value: int):
