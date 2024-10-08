@@ -84,7 +84,7 @@ where
         let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
 
         for org in self.organizations.values_mut() {
-            org.validate_components(blockchain_keys.clone(), blockchain_values.clone())
+            org.validate_components(blockchain_keys.clone(), blockchain_values.clone());
         }
     }
     pub fn validate_all_assets(&mut self) {

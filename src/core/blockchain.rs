@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use ark_ff::PrimeField;
 use ark_r1cs_std::{fields::fp::FpVar, R1CSVar};
-
+#[allow(clippy::upper_case_acronyms)]
 type ROOT<F> = F;
 type SN<F> = F;
 

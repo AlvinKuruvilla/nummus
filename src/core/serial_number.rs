@@ -28,7 +28,7 @@ where
             .0
             .to_constraint_field()
             .unwrap()[0]
-            .to_owned();
+            .clone();
         Self { value: sn }
     }
     pub fn sn(&self) -> FpVar<F> {

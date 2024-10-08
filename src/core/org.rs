@@ -78,7 +78,7 @@ where
         self.epoch_balance_delta = 0;
     }
     pub fn clear_final_balance(&mut self) {
-        self.final_balance = 0
+        self.final_balance = 0;
     }
     pub fn delta(&self) -> i32 {
         self.epoch_balance_delta
@@ -105,7 +105,7 @@ where
         println!("Final Epoch Balance: {}", self.final_balance());
         println!("Epoch Delta: {}", self.epoch_balance_delta);
         println!("Known Addresses: {:?}", self.used_address_public_keys);
-        println!()
+        println!();
     }
     pub fn has_address(&self, address_public_key: String) -> bool {
         self.used_address_public_keys

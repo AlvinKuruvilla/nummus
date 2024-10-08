@@ -37,6 +37,7 @@ pub struct RunConfig {
 }
 impl RunConfig {
     pub fn create() -> Self {
+        #[allow(clippy::string_add)]
         let file_data = fs::read_to_string(get_project_root().unwrap() + "/" + "run_config.json")
             .expect("Couldn't find or load config file.");
         let config_data: RunConfig = serde_json::from_str(&file_data).unwrap();
@@ -48,6 +49,7 @@ impl RunConfig {
     }
 }
 impl fmt::Display for RunConfig {
+    #[allow(rust_2018_idioms)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let _ = write!(f, "Org Count: {}", self.org_count);
         let _ = write!(f, "Transaction Count: {}", self.transaction_count);
@@ -69,6 +71,6 @@ mod tests {
         println!(
             "Addresses per Organization: {}",
             RUN_CONFIG.addresses_per_organization
-        )
+        );
     }
 }

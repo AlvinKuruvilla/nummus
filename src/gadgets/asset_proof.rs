@@ -41,8 +41,8 @@ impl AssetProof {
         public_spent_serial_numbers: Vec<u64>,
     ) -> Self {
         Self {
-            alpha: alpha,
-            expected_occurrence_vector: expected_occurrence_vector,
+            alpha,
+            expected_occurrence_vector,
             blockchain_sns,
             spent_serial_numbers: public_spent_serial_numbers,
         }
