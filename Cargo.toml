@@ -25,3 +25,5 @@ serde = { version = "1.0.210", features = ["derive"] }
 [[example]]
 name = "ot"
 path = "bin/org_test.rs"
+[profile.release]
+debug = true
