@@ -67,10 +67,9 @@ def create_org_histogram():
     modify_key(ConfigKey.ORG_COUNT, starting_value)
 
 
-# TODO: The process gets killed when running with 1000 transactions????
 def create_transaction_histogram():
-    starting_value = 1000
-    transaction_keys = [1000, 10000, 50000, 250000, 1000000]
+    starting_value = 100
+    transaction_keys = [100, 250, 400, 600, 750]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -181,4 +180,4 @@ def create_addresses_histogram():
 
 
 if __name__ == "__main__":
-    create_addresses_histogram()
+    create_org_histogram()
