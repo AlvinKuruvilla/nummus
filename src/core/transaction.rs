@@ -66,19 +66,18 @@ where
         ]
     }
     pub fn root(&self) -> FpVar<F> {
+        let leaves = self.to_vec();
         let cs = ConstraintSystem::<F>::new_ref();
-        for (idx, _) in self.to_vec().iter().enumerate() {
-            // Verify the chosen leaf
-            let is_valid = MerkleTreeGadget::generate_proof_and_validate(
-                &self.to_vec(),
-                cs.clone(),
-                vec![idx],
-            );
+
+        for (idx, _) in leaves.iter().enumerate() {
+            // Validate each leaf
+            let is_valid =
+                MerkleTreeGadget::generate_proof_and_validate(&leaves, cs.clone(), vec![idx]);
             if !is_valid {
                 panic!("Cannot get root hash if leaves are not all valid");
             }
         }
-        MerkleTreeGadget::create_root_hash(self.to_vec(), cs)
+        MerkleTreeGadget::create_root_hash(leaves, cs)
     }
     /// This assumes a single split where the remainder is given back to the original person
     pub fn split_transaction(
