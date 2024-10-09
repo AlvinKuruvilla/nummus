@@ -10,9 +10,10 @@ class ConfigKey(enum.Enum):
 
 
 def run_benchmark_and_get_proof_time() -> str:
-    result = subprocess.run(
-        ["cargo", "run", "--example", "ot", "--release"], stdout=subprocess.PIPE
+    _ = subprocess.run(
+        ["cargo", "build", "--release", "--examples"], stdout=subprocess.PIPE
     )
+    result = subprocess.run(["target/release/examples/ot"], stdout=subprocess.PIPE)
     out = result.stdout.decode("utf-8").split("\n")
     return out[len(out) - 2]
 
