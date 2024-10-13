@@ -146,7 +146,7 @@ def create_addresses_histogram():
     plt.figure(figsize=(10, 6))
 
     # Create bars with specified width and colors
-    bar_width = 45.0  # Set the width of the bars
+    bar_width = 270.0  # Set the width of the bars
 
     # Create a bar for each Address count with its respective color
     bars = plt.bar(
@@ -179,5 +179,9 @@ def create_addresses_histogram():
     modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, starting_value)
 
 
+def memory_usage_hist():
+    run_benchmark_and_get_proof_time("act")
+
+
 if __name__ == "__main__":
-    create_addresses_histogram()
+    create_transaction_histogram()
