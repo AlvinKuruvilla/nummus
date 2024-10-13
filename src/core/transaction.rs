@@ -3,15 +3,15 @@ use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystem;
 use rand::thread_rng;
 
-use crate::{gadgets::merkle_gadget::MerkleTreeGadget, utils::string_to_fpvar};
+use crate::gadgets::merkle_gadget::MerkleTreeGadget;
 
 use super::{address::Address, serial_number::TransactionSerialNumber};
 
 pub struct Transaction<F: PrimeField> {
     transaction_id: FpVar<F>,
     value: i32,
-    sender_address: Address,   // built from the spending key of the sender
-    receiver_address: Address, // built from the spending key of the receiver
+    sender_address: Address<F>, // built from the spending key of the sender
+    receiver_address: Address<F>, // built from the spending key of the receiver
     serial_number: TransactionSerialNumber<F>,
 }
 impl<F> Transaction<F>
@@ -21,15 +21,15 @@ where
     pub fn new(
         transaction_id: FpVar<F>,
         value: i32,
-        sender_address_secret: String,
-        receiver_address_secret: String,
+        sender_address: Address<F>,
+        receiver_address: Address<F>,
         sn_secret: FpVar<F>,
     ) -> Self {
         Self {
             transaction_id,
             value,
-            sender_address: Address::new(sender_address_secret),
-            receiver_address: Address::new(receiver_address_secret),
+            sender_address,
+            receiver_address,
             serial_number: TransactionSerialNumber::new(sn_secret),
         }
     }
@@ -44,24 +44,23 @@ where
         let field_element = F::from(self.value() as u64);
         FpVar::<F>::new_input(cs, || Ok(field_element)).unwrap()
     }
-    pub fn sender_address(&self) -> Address {
+    pub fn sender_address(&self) -> Address<F> {
         self.sender_address.clone()
     }
-    pub fn receiver_address(&self) -> Address {
+    pub fn receiver_address(&self) -> Address<F> {
         self.receiver_address.clone()
     }
     pub fn serial_number(&self) -> FpVar<F> {
         self.serial_number.sn()
     }
     pub fn to_vec(&self) -> Vec<FpVar<F>> {
-        let cs = ConstraintSystem::<F>::new_ref();
         vec![
             self.transaction_id(),
             self.value_as_field_element(),
-            string_to_fpvar(self.sender_address().public_key(), cs.clone()),
-            string_to_fpvar(self.sender_address().secret_key(), cs.clone()),
-            string_to_fpvar(self.receiver_address().public_key(), cs.clone()),
-            string_to_fpvar(self.receiver_address().secret_key(), cs.clone()),
+            self.sender_address().public_key(),
+            self.sender_address().secret_key(),
+            self.receiver_address().public_key(),
+            self.receiver_address().secret_key(),
             self.serial_number(),
         ]
     }
@@ -82,9 +81,9 @@ where
     /// This assumes a single split where the remainder is given back to the original person
     pub fn split_transaction(
         &self,
-        split_values: Vec<i32>,               // The values to split into
-        new_receiver_addresses: Vec<Address>, // The new receiver addresses for each split
-        sender_address_secret: String,        // Sender's secret key
+        split_values: Vec<i32>,                  // The values to split into
+        new_receiver_addresses: Vec<Address<F>>, // The new receiver addresses for each split
+        sender_address_secret: FpVar<F>,         // Sender's secret key
     ) -> Vec<Self> {
         // Ensure that the split values sum up to the original transaction value
         let cs = ConstraintSystem::<F>::new_ref();
@@ -101,6 +100,7 @@ where
         let mut split_transactions = Vec::new();
         let mut rng = thread_rng();
 
+        let value = Address::new(sender_address_secret);
         for (i, split_value) in split_values.into_iter().enumerate() {
             let new_transaction_id =
                 FpVar::<F>::new_input(cs.clone(), || Ok(F::rand(&mut rng))).unwrap();
@@ -114,7 +114,7 @@ where
             let split_transaction = Transaction {
                 transaction_id: new_transaction_id,
                 value: split_value,
-                sender_address: Address::new(sender_address_secret.clone()), // Sender remains the same
+                sender_address: value.clone(), // Sender remains the same
                 receiver_address: new_receiver_addresses[i].clone(), // New receiver address for this split
                 serial_number: new_serial_number,
             };

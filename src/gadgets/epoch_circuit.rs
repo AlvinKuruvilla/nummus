@@ -29,6 +29,7 @@ impl<F: Field> ConstraintSynthesizer<F> for EpochBalanceCircuit<F> {
         let sum = self.initial_balance + self.epoch_delta;
         println!("Initial Balance in circuit: {}", self.initial_balance);
         println!("Epoch delta in circuit: {}", self.epoch_delta);
+        println!("Final Balance in circuit: {}", self.final_balance);
         assert_eq!(sum, self.final_balance);
         Ok(())
     }

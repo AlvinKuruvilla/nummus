@@ -76,6 +76,7 @@
     rust_2018_idioms
 )]
 
+pub mod analysis;
 pub mod core;
 pub mod gadgets;
 pub mod utils;

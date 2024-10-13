@@ -1,7 +1,7 @@
 use ark_ff::PrimeField;
-use std::collections::HashMap;
+use std::{collections::HashMap, io::BufRead};
 
-use crate::utils::fpvars_to_u64s;
+use crate::{analysis::estimate_vec_memory_usage_in_gb, utils::fpvars_to_u64s};
 
 use super::{blockchain::Blockchain, org::Organization, transaction::Transaction};
 
@@ -46,6 +46,8 @@ where
         // Forward the transaction to all organizations
         for org in self.organizations.values_mut() {
             if org.is_involved(&t) {
+                // println!("HERE");
+                // pause_until_enter();
                 // Check if the organization has either the sender or receiver address
                 let has_receiver = org.has_address(receiver_key.clone());
                 let has_sender = org.has_address(sender_key.clone());
@@ -88,8 +90,17 @@ where
     }
     pub fn validate_all_epoch_deltas_and_final_balances(&mut self) {
         let blockchain_keys: Vec<F> = self.blockchain.inner().into_keys().collect();
-        let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
+        println!(
+            "Blockchain Keys Vector Size for org is {:.6} GB",
+            estimate_vec_memory_usage_in_gb(&blockchain_keys)
+        );
 
+        let blockchain_values: Vec<F> = self.blockchain.inner().into_values().collect();
+        println!(
+            "Blockchain Values Vector Size for org is {:.6} GB",
+            estimate_vec_memory_usage_in_gb(&blockchain_values)
+        );
+        // pause_until_enter();
         for org in self.organizations.values_mut() {
             org.validate_components(blockchain_keys.clone(), blockchain_values.clone());
         }
@@ -106,4 +117,15 @@ where
             );
         }
     }
+    pub fn organizations(&self) -> HashMap<String, Organization<F>> {
+        self.organizations.clone()
+    }
+    pub fn blockchain(&self) -> Blockchain<F> {
+        self.blockchain.clone()
+    }
+}
+fn pause_until_enter() {
+    println!("Press Enter to continue...");
+    let stdin = std::io::stdin();
+    let _ = stdin.lock().lines().next(); // Wait for user to press Enter
 }
