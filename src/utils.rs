@@ -10,7 +10,8 @@ use rand::Rng;
 pub fn generate_random_in_range() -> Fr {
     let mut rng = rand::thread_rng();
     let ret = Fr::from(rng.gen_range(0..u32::MAX));
-    println!("Generated random serial number secret: {:?}", ret);
+    // println!("Generated random serial number secret: {:?}", ret);
+    #[allow(clippy::let_and_return)]
     ret
 }
 /// Convert a string to a field element `F`.
