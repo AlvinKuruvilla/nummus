@@ -9,11 +9,14 @@ class ConfigKey(enum.Enum):
     ADDRESSES_PER_ORGANIZATION = 3
 
 
-def run_benchmark_and_get_proof_time() -> str:
+def run_benchmark_and_get_proof_time(binary_name: str = "ot") -> str:
     _ = subprocess.run(
-        ["cargo", "build", "--release", "--examples"], stdout=subprocess.PIPE
+        ["cargo", "build", "--release", "--examples"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
     )
-    result = subprocess.run(["target/release/examples/ot"], stdout=subprocess.PIPE)
+    path = "target/release/examples/" + binary_name
+    result = subprocess.run([path], stdout=subprocess.PIPE)
     out = result.stdout.decode("utf-8").split("\n")
     return out[len(out) - 2]
 
