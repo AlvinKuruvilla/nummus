@@ -3,16 +3,17 @@ use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar};
 use ark_relations::r1cs::ConstraintSystem;
 use ark_std::{test_rng, UniformRand};
 use ducat::{
+    analysis::estimate_hashmap_memory_usage,
     core::{network::Network, org::Organization, run_config::RUN_CONFIG, transaction::Transaction},
     utils::generate_random_in_range,
 };
+use indicatif::ProgressIterator;
 use rand::{seq::IteratorRandom, Rng};
-use std::time::Instant;
 
 pub fn main() {
     std::env::set_var("RUST_BACKTRACE", "full");
-
     let mut rng = test_rng();
+
     let cs = ConstraintSystem::<Fr>::new_ref();
 
     // Create and add organizations to the network
@@ -21,9 +22,7 @@ pub fn main() {
     let mut organizations = Vec::new(); // Store organizations for later use
 
     // Create organizations
-    // TODO: At the beginning of each new epoch should we change something about the organization's initial balances or their addresses?
-    //       This may not necessarily be needed of we consider each run their oen epoch
-    for i in 0..RUN_CONFIG.org_count {
+    for i in (0..RUN_CONFIG.org_count).progress() {
         let org_name = format!("org{}", i + 1);
         let initial_balance = rand::thread_rng().gen_range(5..500000); // Random initial balance
         let addresses = Organization::create_known_addresses(
@@ -35,9 +34,10 @@ pub fn main() {
         organizations.push(organization.clone()); // Store organization for later access
         network.add_organization(organization);
     }
-
+    let size = estimate_hashmap_memory_usage(&network.organizations());
+    println!("Size for {} orgs is {:.6} GB", RUN_CONFIG.org_count, size);
     // Generate random transaction data
-    for _ in 0..RUN_CONFIG.transaction_count {
+    for _ in (0..RUN_CONFIG.transaction_count).progress() {
         let tid = FpVar::new_input(cs.clone(), || Ok(Fr::rand(&mut rng))).unwrap();
 
         // Select random sender and receiver organizations
@@ -80,13 +80,14 @@ pub fn main() {
         // Forward the transaction to the network
         network.forward_transaction(transaction);
     }
-    let start = Instant::now();
+    let blockchain_map_size = estimate_hashmap_memory_usage(&network.blockchain().inner());
+    println!(
+        "Transaction Hashmap Size for {} orgs is {:.6} GB",
+        RUN_CONFIG.org_count, blockchain_map_size
+    );
     network.dump_network_info();
     println!("Transferring deltas to org balance");
     network.transfer_delta_to_organization_balance();
     network.dump_network_info();
     network.validate_all_epoch_deltas_and_final_balances();
-    network.validate_all_assets();
-    network.clean_deltas_and_balances_at_epoch_end();
-    println!("Nova::prove_step: {:?}", start.elapsed());
 }
