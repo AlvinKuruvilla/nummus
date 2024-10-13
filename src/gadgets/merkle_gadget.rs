@@ -95,20 +95,18 @@ impl MerkleTreeGadget {
         // Compute leaf hashes once and store them for both tree creation and proof validation
         for leaf in leaves.iter() {
             let bytes = leaf.to_bytes().unwrap();
-            let mut hash_input = [0u8; 32];
 
-            // Directly copy bytes into the hash_input array
-            for (i, byte) in bytes.iter().enumerate() {
-                hash_input[i] = byte.value().unwrap();
-            }
+            // Collect the bytes directly into the hash and compute the hash
+            let hash = Sha256::hash(
+                &bytes
+                    .iter()
+                    .map(|byte| byte.value().unwrap())
+                    .collect::<Vec<u8>>(),
+            );
 
-            // Compute the hash and push it to the pre-allocated vector
-            let hash = Sha256::hash(&hash_input);
-            let mut hash_array = [0u8; 32];
-            hash_array.copy_from_slice(&hash);
-            leaf_hashes.push(hash_array);
+            // Push the hash into the pre-allocated vector
+            leaf_hashes.push(hash);
         }
-
         // Create the Merkle tree from the pre-computed leaf hashes
         let tree = MerkleTree::<Sha256>::from_leaves(&leaf_hashes);
 
