@@ -132,7 +132,7 @@ where
         num_addresses: usize,
         offset: usize,
     ) -> Vec<Address<F>> {
-        let mut addresses = Vec::new();
+        let mut addresses = Vec::with_capacity(num_addresses);
         for i in 0..num_addresses {
             let input =
                 FpVar::new_input(cs.clone(), || Ok(F::from(i as u64 + offset as u64))).unwrap();
