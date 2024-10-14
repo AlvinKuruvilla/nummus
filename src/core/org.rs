@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, io::BufRead};
 
 use super::{address::Address, transaction::Transaction};
 use crate::{
@@ -14,7 +14,7 @@ use ark_bn254::{Bn254, Fr};
 use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
-use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
+use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar, ToBytesGadget};
 use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
@@ -134,9 +134,12 @@ where
     ) -> Vec<Address<F>> {
         let mut addresses = Vec::new();
         for i in 0..num_addresses {
-            let address = Address::new(
-                FpVar::new_input(cs.clone(), || Ok(F::from(i as u64 + offset as u64))).unwrap(),
-            );
+            let input =
+                FpVar::new_input(cs.clone(), || Ok(F::from(i as u64 + offset as u64))).unwrap();
+            // let size = input.to_bytes().unwrap().len();
+            // println!("Address Byte Vector Size: {:?}", size);
+            // pause_until_enter();
+            let address = Address::new(input);
             // let address = format!("{}", i + offset); // More descriptive format
             addresses.push(address);
         }
@@ -264,4 +267,9 @@ pub fn validate_transaction_roots(
             .iter()
             .any(|blockchain_transaction_root| *t_root == *blockchain_transaction_root)
     })
+}
+fn pause_until_enter() {
+    println!("Press Enter to continue...");
+    let stdin = std::io::stdin();
+    let _ = stdin.lock().lines().next(); // Wait for user to press Enter
 }

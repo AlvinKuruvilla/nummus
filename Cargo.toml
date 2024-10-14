@@ -29,6 +29,9 @@ path = "bin/org_test.rs"
 [[example]]
 name = "act"
 path = "bin/alloc_test.rs"
+[[example]]
+name = "nt"
+path = "bin/network_test.rs"
 
 [profile.release]
 debug = true
