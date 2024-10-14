@@ -16,16 +16,20 @@ where
     F: PrimeField,
 {
     pub fn new(secret_key: FpVar<F>) -> Self {
-        let mut holder = vec![];
-        let unit_var: UnitVar<F> = UnitVar::default();
-        holder.extend_from_slice(&secret_key.to_bytes().unwrap());
+        // Get the byte representation of the secret key as Vec<UInt8<F>>
+        let secret_key_bytes = secret_key.to_bytes().unwrap();
 
-        let sn = Sha256Gadget::evaluate(&unit_var, &holder)
+        // Create a UnitVar instance
+        let unit_var: UnitVar<F> = UnitVar::default();
+
+        // Use the secret_key_bytes (which is Vec<UInt8<F>>) directly
+        let sn = Sha256Gadget::evaluate(&unit_var, &secret_key_bytes)
             .unwrap()
             .0
             .to_constraint_field()
             .unwrap()[0]
             .clone();
+
         Self {
             public_key: sn,
             secret_key,
