@@ -9,6 +9,12 @@ class ConfigKey(enum.Enum):
     ADDRESSES_PER_ORGANIZATION = 3
 
 
+class ProofType(enum.Enum):
+    EPOCH = 1
+    ASSET = 2
+    ALL = 3
+
+
 def run_benchmark_and_get_proof_time(binary_name: str = "ot") -> str:
     _ = subprocess.run(
         ["cargo", "build", "--release", "--examples"],
@@ -24,9 +30,9 @@ def run_benchmark_and_get_proof_time(binary_name: str = "ot") -> str:
 def extract_time(nova_string: str) -> float:
     # Use a regular expression to find the time value
     prefix = "Nova::prove_step: "
-    print(nova_string[len(prefix) : -1])
     try:
-        return float(nova_string[len(prefix) : -1])
+        time = float(nova_string[len(prefix) : -1])
+        return time
     except ValueError:
         # This hopefully only triggers when the proof time is in milliseconds
         # so we can just remove an extra character.
@@ -51,3 +57,9 @@ def modify_key(key: ConfigKey, new_value: int):
     # Write the updated configuration back to the JSON file
     with open("run_config.json", "w") as file:
         json.dump(config, file, indent=4)
+
+
+def reset_to_default_config_state(org_count, transaction_count, address_count):
+    modify_key(ConfigKey.ORG_COUNT, org_count)
+    modify_key(ConfigKey.TRANSACTION_COUNT, transaction_count)
+    modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, address_count)

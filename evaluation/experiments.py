@@ -3,17 +3,23 @@ import os
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from process_helper import (
+    ProofType,
     modify_key,
     ConfigKey,
     extract_time,
+    reset_to_default_config_state,
     run_benchmark_and_get_proof_time,
 )
 import matplotlib.pyplot as plt
 
+ORG_COUNT_DEFAULT = 5
+TRANSACTION_COUNT_DEFAULT = 10
+ADDRESSES_PER_ORGANIZATION_DEFAULT = 10
 
-def create_org_histogram():
+
+def create_org_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 50
-    org_keys = [50, 200, 500, 750, 1000]
+    org_keys = [5, 10, 25, 50, 75]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -42,9 +48,19 @@ def create_org_histogram():
     )
 
     # Adding titles and labels
-    plt.title("Proof Time vs Organization Count", fontsize=16)
+    if proof_type == ProofType.ALL:
+        plt.title("Proof Time vs Organization Count", fontsize=16)
+    elif proof_type == ProofType.EPOCH:
+        plt.title("Epoch Proof Time vs Organization Count", fontsize=16)
+    elif proof_type == ProofType.ASSET:
+        plt.title("Asset Proof Time vs Organization Count", fontsize=16)
     plt.xlabel("Organization Count", fontsize=14)
-    plt.ylabel("Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.ALL:
+        plt.ylabel("Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.EPOCH:
+        plt.ylabel("Epoch Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.ASSET:
+        plt.ylabel("Asset Proof Time (seconds)", fontsize=14)
 
     # Adding a legend
     plt.legend(
@@ -63,13 +79,18 @@ def create_org_histogram():
 
     # Display the plot
     plt.tight_layout()
-    plt.savefig("Proof Time vs Organization Count.png")
+    if proof_type == ProofType.ALL:
+        plt.savefig("Proof Time vs Organization Count.png")
+    elif proof_type == ProofType.EPOCH:
+        plt.savefig("Epoch Proof Time vs Organization Count.png")
+    elif proof_type == ProofType.ASSET:
+        plt.savefig("Asset Proof Time vs Organization Count.png")
     modify_key(ConfigKey.ORG_COUNT, starting_value)
 
 
-def create_transaction_histogram():
+def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 100
-    transaction_keys = [100, 250, 400, 600, 750]
+    transaction_keys = [25, 50, 100, 200, 300]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -98,9 +119,20 @@ def create_transaction_histogram():
     )
 
     # Adding titles and labels
-    plt.title("Proof Time vs Transaction Count", fontsize=16)
+    if proof_type == ProofType.ALL:
+        plt.title("Proof Time vs Transaction Count", fontsize=16)
+    elif proof_type == ProofType.EPOCH:
+        plt.title("Epoch Proof Time vs Transaction Count", fontsize=16)
+    elif proof_type == ProofType.ASSET:
+        plt.title("Asset Proof Time vs Transaction Count", fontsize=16)
+
     plt.xlabel("Transaction Count", fontsize=14)
-    plt.ylabel("Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.ALL:
+        plt.ylabel("Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.EPOCH:
+        plt.ylabel("Epoch Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.ASSET:
+        plt.ylabel("Asset Proof Time (seconds)", fontsize=14)
 
     # Adding a legend
     plt.legend(
@@ -119,13 +151,18 @@ def create_transaction_histogram():
 
     # Display the plot
     plt.tight_layout()
-    plt.savefig("Proof Time vs Transaction Count.png")
+    if proof_type == ProofType.ALL:
+        plt.savefig("Proof Time vs Transaction Count.png")
+    elif proof_type == ProofType.EPOCH:
+        plt.savefig("Epoch Proof Time vs Transaction Count.png")
+    elif proof_type == ProofType.ASSET:
+        plt.savefig("Asset Proof Time vs Transaction Count.png")
     modify_key(ConfigKey.TRANSACTION_COUNT, starting_value)
 
 
-def create_addresses_histogram():
-    starting_value = 10
-    address_keys = [100, 500, 1000, 5000, 10000]
+def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
+    starting_value = 100
+    address_keys = [10, 25, 50, 75, 100]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -146,7 +183,7 @@ def create_addresses_histogram():
     plt.figure(figsize=(10, 6))
 
     # Create bars with specified width and colors
-    bar_width = 270.0  # Set the width of the bars
+    bar_width = 10.0  # Set the width of the bars
 
     # Create a bar for each Address count with its respective color
     bars = plt.bar(
@@ -154,9 +191,21 @@ def create_addresses_histogram():
     )
 
     # Adding titles and labels
-    plt.title("Proof Time vs Address Count", fontsize=16)
+    if proof_type == ProofType.ALL:
+        plt.title("Proof Time vs Address Count")
+    elif proof_type == ProofType.EPOCH:
+        plt.title("Epoch Proof Time vs Address Count")
+    elif proof_type == ProofType.ASSET:
+        plt.title("Asset Proof Time vs Address Count")
+
     plt.xlabel("Address Count", fontsize=14)
-    plt.ylabel("Proof Time (seconds)", fontsize=14)
+
+    if proof_type == ProofType.ALL:
+        plt.ylabel("Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.EPOCH:
+        plt.ylabel("Epoch Proof Time (seconds)", fontsize=14)
+    if proof_type == ProofType.ASSET:
+        plt.ylabel("Asset Proof Time (seconds)", fontsize=14)
 
     # Adding a legend
     plt.legend(
@@ -175,7 +224,12 @@ def create_addresses_histogram():
 
     # Display the plot
     plt.tight_layout()
-    plt.savefig("Proof Time vs Address Count.png")
+    if proof_type == ProofType.ALL:
+        plt.savefig("Proof Time vs Address Count.png")
+    elif proof_type == ProofType.EPOCH:
+        plt.savefig("Epoch Proof Time vs Address Count.png")
+    elif proof_type == ProofType.ASSET:
+        plt.savefig("Asset Proof Time vs Address Count.png")
     modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, starting_value)
 
 
@@ -184,4 +238,7 @@ def memory_usage_hist():
 
 
 if __name__ == "__main__":
-    create_transaction_histogram()
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_org_histogram(ProofType.ASSET)
