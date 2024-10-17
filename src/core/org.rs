@@ -14,7 +14,7 @@ use ark_bn254::{Bn254, Fr};
 use ark_crypto_primitives::snark::SNARK;
 use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
-use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar, ToBytesGadget};
+use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
@@ -52,7 +52,7 @@ where
     pub fn add_address_public_key(&mut self, address_public_key: FpVar<F>) {
         if !self.has_address(address_public_key.clone()) {
             self.used_address_public_keys
-                .push(Address::new(address_public_key));
+                .push(Address::new(&address_public_key));
         } else {
             panic!(
                 "Repeat address public key {:?} added to used_address_public_keys",
@@ -133,13 +133,14 @@ where
         offset: usize,
     ) -> Vec<Address<F>> {
         let mut addresses = Vec::with_capacity(num_addresses);
+        let cs = cs.clone();
         for i in 0..num_addresses {
             let input =
                 FpVar::new_input(cs.clone(), || Ok(F::from(i as u64 + offset as u64))).unwrap();
             // let size = input.to_bytes().unwrap().len();
             // println!("Address Byte Vector Size: {:?}", size);
             // pause_until_enter();
-            let address = Address::new(input);
+            let address = Address::new(&input);
             // let address = format!("{}", i + offset); // More descriptive format
             addresses.push(address);
         }

@@ -100,7 +100,7 @@ where
         let mut split_transactions = Vec::new();
         let mut rng = thread_rng();
 
-        let value = Address::new(sender_address_secret);
+        let value = Address::new(&sender_address_secret);
         for (i, split_value) in split_values.into_iter().enumerate() {
             let new_transaction_id =
                 FpVar::<F>::new_input(cs.clone(), || Ok(F::rand(&mut rng))).unwrap();

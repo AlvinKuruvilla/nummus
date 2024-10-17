@@ -15,7 +15,7 @@ impl<F> Address<F>
 where
     F: PrimeField,
 {
-    pub fn new(secret_key: FpVar<F>) -> Self {
+    pub fn new(secret_key: &FpVar<F>) -> Self {
         // Get the byte representation of the secret key as Vec<UInt8<F>>
         let secret_key_bytes = secret_key.to_bytes().unwrap();
 
@@ -32,7 +32,7 @@ where
 
         Self {
             public_key: sn,
-            secret_key,
+            secret_key: secret_key.clone(),
         }
     }
     pub fn public_key(&self) -> FpVar<F> {
