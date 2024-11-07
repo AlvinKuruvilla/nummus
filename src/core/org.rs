@@ -225,7 +225,7 @@ where
         let (proving_key, verifying_key) =
             Groth16::<Bn254, LibsnarkReduction>::circuit_specific_setup(
                 AssetProof::new(
-                    generate_alpha(blockchain_values),
+                    generate_alpha(blockchain_values.clone()),
                     occurrences.clone(),
                     prime_fields_to_u64s(blockchain_keys.clone()),
                     spent_serial_numbers.clone(),
@@ -233,8 +233,9 @@ where
                 &mut rng,
             )
             .unwrap();
+        //? It is unclear to me if using the same alpha value is strictly necessary but I think its better to play it safe and make them the same
         let asset_proof = generate_asset_proof(
-            5,
+            generate_alpha(blockchain_values),
             spent_serial_numbers.clone(),
             prime_fields_to_u64s(blockchain_keys.clone()),
             occurrences,
