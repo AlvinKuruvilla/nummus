@@ -1,7 +1,7 @@
 import subprocess
 import enum
 import json
-import tabulate
+from tabulate import tabulate
 
 
 class ConfigKey(enum.Enum):
