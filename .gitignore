@@ -1,2 +1,4 @@
 /target
 *.png
+env/
+__pycache__

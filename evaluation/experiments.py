@@ -27,11 +27,11 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
 
     # Define distinct colors for each bar
     colors = [
-        "skyblue",
-        "lightgreen",
-        "salmon",
-        "gold",
-        "purple",
+        "steelblue",
+        "mediumseagreen",
+        "coral",
+        "darkorange",
+        "royalblue",
     ]
 
     for org_key in tqdm.tqdm(org_keys):
@@ -44,13 +44,8 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
     # Plotting the histogram
     plt.figure(figsize=(10, 6))
 
-    # Create bars with specified width and colors
-    bar_width = 45.0  # Set the width of the bars
-
     # Create a bar for each organization count with its respective color
-    bars = plt.bar(
-        org_keys, proof_times, width=bar_width, color=colors, edgecolor="black"
-    )
+    bars = plt.bar(org_keys, proof_times, width=5, color=colors, edgecolor="black")
 
     # Adding titles and labels
     if proof_type == ProofType.ALL:
@@ -101,11 +96,11 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
 
     # Define distinct colors for each bar
     colors = [
-        "skyblue",
-        "lightgreen",
-        "salmon",
-        "gold",
-        "purple",
+        "steelblue",
+        "mediumseagreen",
+        "coral",
+        "darkorange",
+        "royalblue",
     ]
 
     for transaction_key in tqdm.tqdm(transaction_keys):
@@ -118,12 +113,9 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
     # Plotting the histogram
     plt.figure(figsize=(10, 6))
 
-    # Create bars with specified width and colors
-    bar_width = 45.0  # Set the width of the bars
-
     # Create a bar for each Transaction count with its respective color
     bars = plt.bar(
-        transaction_keys, proof_times, width=bar_width, color=colors, edgecolor="black"
+        transaction_keys, proof_times, width=5, color=colors, edgecolor="black"
     )
 
     # Adding titles and labels
@@ -176,11 +168,11 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
 
     # Define distinct colors for each bar
     colors = [
-        "skyblue",
-        "lightgreen",
-        "salmon",
-        "gold",
-        "purple",
+        "steelblue",
+        "mediumseagreen",
+        "coral",
+        "darkorange",
+        "royalblue",
     ]
 
     for address in tqdm.tqdm(address_keys):
@@ -193,13 +185,8 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
     # Plotting the histogram
     plt.figure(figsize=(10, 6))
 
-    # Create bars with specified width and colors
-    bar_width = 10.0  # Set the width of the bars
-
     # Create a bar for each Address count with its respective color
-    bars = plt.bar(
-        address_keys, proof_times, width=bar_width, color=colors, edgecolor="black"
-    )
+    bars = plt.bar(address_keys, proof_times, width=5, color=colors, edgecolor="black")
 
     # Adding titles and labels
     if proof_type == ProofType.ALL:
