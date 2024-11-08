@@ -77,12 +77,12 @@ def enum_to_alias(enum_member):
         raise ValueError("Unknown Enum member")
 
 
-def print_results_table(keys, times):
+def print_results_table(keys, times, proof_type: ProofType):
     if len(keys) != len(times):
         raise ValueError("Both lists must have the same length")
 
     # Prepare the table headers
-    headers = ["Key", "Exec Time"]
+    headers = ["Key", enum_to_alias(proof_type) + "_" + "Exec Time"]
 
     # Combine the two lists into a list of tuples (key, value)
     rows = list(zip(keys, times))

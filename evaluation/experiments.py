@@ -90,7 +90,7 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
         plt.savefig("Epoch Proof Time vs Organization Count.png")
     elif proof_type == ProofType.ASSET:
         plt.savefig("Asset Proof Time vs Organization Count.png")
-    print_results_table(org_keys, proof_times)
+    print_results_table(org_keys, proof_times, proof_type)
     modify_key(ConfigKey.ORG_COUNT, starting_value)
 
 
@@ -165,7 +165,7 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
         plt.savefig("Epoch Proof Time vs Transaction Count.png")
     elif proof_type == ProofType.ASSET:
         plt.savefig("Asset Proof Time vs Transaction Count.png")
-    print_results_table(transaction_keys, proof_times)
+    print_results_table(transaction_keys, proof_times, proof_type)
     modify_key(ConfigKey.TRANSACTION_COUNT, starting_value)
 
 
@@ -241,7 +241,7 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
         plt.savefig("Epoch Proof Time vs Address Count.png")
     elif proof_type == ProofType.ASSET:
         plt.savefig("Asset Proof Time vs Address Count.png")
-    print_results_table(address_keys, proof_times)
+    print_results_table(address_keys, proof_times, proof_type)
     modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, starting_value)
 
 
