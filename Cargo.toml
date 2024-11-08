@@ -30,8 +30,16 @@ name = "nt"
 path = "bin/network_test.rs"
 
 [[example]]
-name = "ot"
-path = "bin/org_test.rs"
+name = "at"
+path = "bin/asset_test.rs"
+
+[[example]]
+name = "et"
+path = "bin/epoch_test.rs"
+
+[[example]]
+name = "pt"
+path = "bin/proof_test.rs"
 
 [[example]]
 name = "act"
