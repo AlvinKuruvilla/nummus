@@ -19,6 +19,8 @@ ORG_COUNT_DEFAULT = 5
 TRANSACTION_COUNT_DEFAULT = 10
 ADDRESSES_PER_ORGANIZATION_DEFAULT = 10
 
+gen_graph: bool = False
+
 
 def create_org_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 50
@@ -79,12 +81,13 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
 
     # Display the plot
     plt.tight_layout()
-    if proof_type == ProofType.ALL:
-        plt.savefig("Proof Time vs Organization Count.png")
-    elif proof_type == ProofType.EPOCH:
-        plt.savefig("Epoch Proof Time vs Organization Count.png")
-    elif proof_type == ProofType.ASSET:
-        plt.savefig("Asset Proof Time vs Organization Count.png")
+    if gen_graph is True:
+        if proof_type == ProofType.ALL:
+            plt.savefig("Proof Time vs Organization Count.png")
+        elif proof_type == ProofType.EPOCH:
+            plt.savefig("Epoch Proof Time vs Organization Count.png")
+        elif proof_type == ProofType.ASSET:
+            plt.savefig("Asset Proof Time vs Organization Count.png")
     print_results_table(org_keys, proof_times, proof_type)
     modify_key(ConfigKey.ORG_COUNT, starting_value)
 
@@ -151,12 +154,13 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
 
     # Display the plot
     plt.tight_layout()
-    if proof_type == ProofType.ALL:
-        plt.savefig("Proof Time vs Transaction Count.png")
-    elif proof_type == ProofType.EPOCH:
-        plt.savefig("Epoch Proof Time vs Transaction Count.png")
-    elif proof_type == ProofType.ASSET:
-        plt.savefig("Asset Proof Time vs Transaction Count.png")
+    if gen_graph is True:
+        if proof_type == ProofType.ALL:
+            plt.savefig("Proof Time vs Transaction Count.png")
+        elif proof_type == ProofType.EPOCH:
+            plt.savefig("Epoch Proof Time vs Transaction Count.png")
+        elif proof_type == ProofType.ASSET:
+            plt.savefig("Asset Proof Time vs Transaction Count.png")
     print_results_table(transaction_keys, proof_times, proof_type)
     modify_key(ConfigKey.TRANSACTION_COUNT, starting_value)
 
@@ -222,12 +226,13 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
 
     # Display the plot
     plt.tight_layout()
-    if proof_type == ProofType.ALL:
-        plt.savefig("Proof Time vs Address Count.png")
-    elif proof_type == ProofType.EPOCH:
-        plt.savefig("Epoch Proof Time vs Address Count.png")
-    elif proof_type == ProofType.ASSET:
-        plt.savefig("Asset Proof Time vs Address Count.png")
+    if gen_graph is True:
+        if proof_type == ProofType.ALL:
+            plt.savefig("Proof Time vs Address Count.png")
+        elif proof_type == ProofType.EPOCH:
+            plt.savefig("Epoch Proof Time vs Address Count.png")
+        elif proof_type == ProofType.ASSET:
+            plt.savefig("Asset Proof Time vs Address Count.png")
     print_results_table(address_keys, proof_times, proof_type)
     modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, starting_value)
 
