@@ -1,6 +1,7 @@
 import subprocess
 import enum
 import json
+import tabulate
 
 
 class ConfigKey(enum.Enum):
@@ -15,7 +16,7 @@ class ProofType(enum.Enum):
     ALL = 3
 
 
-def run_benchmark_and_get_proof_time(binary_name: str = "ot") -> str:
+def run_benchmark_and_get_proof_time(binary_name: str) -> str:
     _ = subprocess.run(
         ["cargo", "build", "--release", "--examples"],
         stdout=subprocess.DEVNULL,
@@ -63,3 +64,28 @@ def reset_to_default_config_state(org_count, transaction_count, address_count):
     modify_key(ConfigKey.ORG_COUNT, org_count)
     modify_key(ConfigKey.TRANSACTION_COUNT, transaction_count)
     modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, address_count)
+
+
+def enum_to_alias(enum_member):
+    if enum_member == ProofType.EPOCH:
+        return "et"
+    elif enum_member == ProofType.ASSET:
+        return "at"
+    elif enum_member == ProofType.ALL:
+        return "pt"
+    else:
+        raise ValueError("Unknown Enum member")
+
+
+def print_results_table(keys, times):
+    if len(keys) != len(times):
+        raise ValueError("Both lists must have the same length")
+
+    # Prepare the table headers
+    headers = ["Key", "Exec Time"]
+
+    # Combine the two lists into a list of tuples (key, value)
+    rows = list(zip(keys, times))
+
+    # Print the table
+    print(tabulate(rows, headers=headers, tablefmt="pretty"))

@@ -1,12 +1,15 @@
 import sys
 import os
+import tqdm
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from process_helper import (
     ProofType,
+    enum_to_alias,
     modify_key,
     ConfigKey,
     extract_time,
+    print_results_table,
     reset_to_default_config_state,
     run_benchmark_and_get_proof_time,
 )
@@ -19,7 +22,7 @@ ADDRESSES_PER_ORGANIZATION_DEFAULT = 10
 
 def create_org_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 50
-    org_keys = [5, 10, 25, 50, 75]
+    org_keys = [10, 25, 40, 50, 75]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -31,9 +34,11 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
         "purple",
     ]
 
-    for org_key in org_keys:
+    for org_key in tqdm.tqdm(org_keys):
         modify_key(ConfigKey.ORG_COUNT, org_key)
-        proof_time = extract_time(run_benchmark_and_get_proof_time())
+        proof_time = extract_time(
+            run_benchmark_and_get_proof_time(enum_to_alias(proof_type))
+        )
         proof_times.append(proof_time)
 
     # Plotting the histogram
@@ -85,12 +90,13 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
         plt.savefig("Epoch Proof Time vs Organization Count.png")
     elif proof_type == ProofType.ASSET:
         plt.savefig("Asset Proof Time vs Organization Count.png")
+    print_results_table(org_keys, proof_times)
     modify_key(ConfigKey.ORG_COUNT, starting_value)
 
 
 def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 100
-    transaction_keys = [25, 50, 100, 200, 300]
+    transaction_keys = [50, 100, 150, 200, 300]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -102,9 +108,11 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
         "purple",
     ]
 
-    for transaction_key in transaction_keys:
+    for transaction_key in tqdm.tqdm(transaction_keys):
         modify_key(ConfigKey.TRANSACTION_COUNT, transaction_key)
-        proof_time = extract_time(run_benchmark_and_get_proof_time())
+        proof_time = extract_time(
+            run_benchmark_and_get_proof_time(enum_to_alias(proof_type))
+        )
         proof_times.append(proof_time)
 
     # Plotting the histogram
@@ -157,12 +165,13 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
         plt.savefig("Epoch Proof Time vs Transaction Count.png")
     elif proof_type == ProofType.ASSET:
         plt.savefig("Asset Proof Time vs Transaction Count.png")
+    print_results_table(transaction_keys, proof_times)
     modify_key(ConfigKey.TRANSACTION_COUNT, starting_value)
 
 
 def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 100
-    address_keys = [10, 25, 50, 75, 100]
+    address_keys = [50, 75, 100, 150, 200]
     proof_times = []
 
     # Define distinct colors for each bar
@@ -174,9 +183,11 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
         "purple",
     ]
 
-    for address in address_keys:
+    for address in tqdm.tqdm(address_keys):
         modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, address)
-        proof_time = extract_time(run_benchmark_and_get_proof_time())
+        proof_time = extract_time(
+            run_benchmark_and_get_proof_time(enum_to_alias(proof_type))
+        )
         proof_times.append(proof_time)
 
     # Plotting the histogram
@@ -230,6 +241,7 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
         plt.savefig("Epoch Proof Time vs Address Count.png")
     elif proof_type == ProofType.ASSET:
         plt.savefig("Asset Proof Time vs Address Count.png")
+    print_results_table(address_keys, proof_times)
     modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, starting_value)
 
 
@@ -241,4 +253,43 @@ if __name__ == "__main__":
     reset_to_default_config_state(
         ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
     )
+    print("Running All organization experiments")
     create_org_histogram(ProofType.ASSET)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_org_histogram(ProofType.EPOCH)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_org_histogram(ProofType.ALL)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+
+    print("Running All address experiments")
+    create_addresses_histogram(ProofType.ASSET)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_addresses_histogram(ProofType.EPOCH)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_addresses_histogram(ProofType.ALL)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    print("Running All transaction experiments")
+    create_transaction_histogram(ProofType.ASSET)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_transaction_histogram(ProofType.EPOCH)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
+    create_transaction_histogram(ProofType.ALL)
+    reset_to_default_config_state(
+        ORG_COUNT_DEFAULT, TRANSACTION_COUNT_DEFAULT, ADDRESSES_PER_ORGANIZATION_DEFAULT
+    )
