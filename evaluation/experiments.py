@@ -5,6 +5,7 @@ import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from process_helper import (
     ProofType,
+    build_executables,
     enum_to_alias,
     modify_key,
     ConfigKey,
@@ -26,7 +27,7 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 50
     org_keys = [10, 25, 40, 50, 75]
     proof_times = []
-
+    build_executables()
     # Define distinct colors for each bar
     colors = [
         "steelblue",
@@ -96,7 +97,7 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 100
     transaction_keys = [50, 100, 150, 200, 300]
     proof_times = []
-
+    build_executables()
     # Define distinct colors for each bar
     colors = [
         "steelblue",
@@ -169,7 +170,7 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
     starting_value = 100
     address_keys = [50, 75, 100, 150, 200]
     proof_times = []
-
+    build_executables()
     # Define distinct colors for each bar
     colors = [
         "steelblue",
@@ -238,6 +239,7 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
 
 
 def memory_usage_hist():
+    build_executables()
     run_benchmark_and_get_proof_time("act")
 
 

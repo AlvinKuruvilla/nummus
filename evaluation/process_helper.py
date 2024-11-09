@@ -16,12 +16,15 @@ class ProofType(enum.Enum):
     ALL = 3
 
 
-def run_benchmark_and_get_proof_time(binary_name: str) -> str:
+def build_executables():
     _ = subprocess.run(
         ["cargo", "build", "--release", "--examples"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
     )
+
+
+def run_benchmark_and_get_proof_time(binary_name: str) -> str:
     path = "target/release/examples/" + binary_name
     result = subprocess.run([path], stdout=subprocess.PIPE)
     out = result.stdout.decode("utf-8").split("\n")
