@@ -16,16 +16,15 @@ from process_helper import (
 )
 import matplotlib.pyplot as plt
 
-ORG_COUNT_DEFAULT = 5
+ORG_COUNT_DEFAULT = 10
 TRANSACTION_COUNT_DEFAULT = 10
 ADDRESSES_PER_ORGANIZATION_DEFAULT = 10
 
-gen_graph: bool = False
+gen_graph: bool = True
 
 
 def create_org_histogram(proof_type: ProofType = ProofType.ALL):
-    starting_value = 50
-    org_keys = [10, 25, 40, 50, 75]
+    org_keys = [10, 20, 41, 84, 172]
     proof_times = []
     build_executables()
     # Define distinct colors for each bar
@@ -90,12 +89,10 @@ def create_org_histogram(proof_type: ProofType = ProofType.ALL):
         elif proof_type == ProofType.ASSET:
             plt.savefig("Asset Proof Time vs Organization Count.png")
     print_results_table(org_keys, proof_times, proof_type)
-    modify_key(ConfigKey.ORG_COUNT, starting_value)
 
 
 def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
-    starting_value = 100
-    transaction_keys = [50, 100, 150, 200, 300]
+    transaction_keys = [10, 31, 98, 305, 955]
     proof_times = []
     build_executables()
     # Define distinct colors for each bar
@@ -163,12 +160,10 @@ def create_transaction_histogram(proof_type: ProofType = ProofType.ALL):
         elif proof_type == ProofType.ASSET:
             plt.savefig("Asset Proof Time vs Transaction Count.png")
     print_results_table(transaction_keys, proof_times, proof_type)
-    modify_key(ConfigKey.TRANSACTION_COUNT, starting_value)
 
 
 def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
-    starting_value = 100
-    address_keys = [50, 75, 100, 150, 200]
+    address_keys = [10, 24, 59, 142, 345]
     proof_times = []
     build_executables()
     # Define distinct colors for each bar
@@ -235,7 +230,6 @@ def create_addresses_histogram(proof_type: ProofType = ProofType.ALL):
         elif proof_type == ProofType.ASSET:
             plt.savefig("Asset Proof Time vs Address Count.png")
     print_results_table(address_keys, proof_times, proof_type)
-    modify_key(ConfigKey.ADDRESSES_PER_ORGANIZATION, starting_value)
 
 
 def memory_usage_hist():
