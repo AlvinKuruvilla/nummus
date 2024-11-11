@@ -81,10 +81,10 @@ pub fn main() {
         network.forward_transaction(transaction);
     }
     let start = Instant::now();
-    network.dump_network_info();
+    // network.dump_network_info();
     println!("Transferring deltas to org balance");
     network.transfer_delta_to_organization_balance();
-    network.dump_network_info();
+    // network.dump_network_info();
     // network.validate_all_epoch_deltas_and_final_balances();
     //* Uncomment the below line and comment out the above line when we are testing just the asset proof */
     //* If the validate_all_epoch_deltas_and_final_balances is not commented out but validate_all_assets is commented out we are just testing the epoch proof  */
