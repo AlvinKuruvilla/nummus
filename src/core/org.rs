@@ -19,10 +19,26 @@ use ark_relations::r1cs::ConstraintSystemRef;
 use rand::rngs::OsRng;
 
 #[derive(Clone)]
+/// An Organization on a cryptocurrency platform.
+///
+/// # Type Parameters
+///
+/// - `F`: The prime field used.
+///
+/// # Fields
+///
+/// - `spent_serial_numbers`: A list of the hashed (or "committed") serial numbers for transactions the organization participated in.
+/// - `known_address_public_keys`: A list of all addresses' public keys belonging to the organization.
+/// - `transaction_root_cache`: A list of the hashed (or "committed") transaction values for transactions the organization participated in.
+/// - `unique_identifier`: A unique name for the Organization.
+/// - `_initial_balance`: An immutable value representing how much "money" the Organization starts the epoch with.
+/// - `final_balance`: The final balance the Organization ends the epoch with.
+/// - `epoch_balance_delta`: The difference between the Organization's initial and final balances for the epoch.
+
 pub struct Organization<F: PrimeField> {
     // TODO: Change the balance counters to u32 and keep a flag for each of those whether or not they are negative
     spent_serial_numbers: VecDeque<FpVar<F>>,
-    used_address_public_keys: Vec<Address<F>>,
+    known_address_public_keys: Vec<Address<F>>,
     transaction_root_cache: VecDeque<FpVar<F>>,
     unique_identifier: String,
     _initial_balance: i32,
@@ -40,24 +56,13 @@ where
     ) -> Self {
         Self {
             spent_serial_numbers: VecDeque::new(),
-            used_address_public_keys: known_addresses,
+            known_address_public_keys: known_addresses,
             unique_identifier,
             transaction_root_cache: VecDeque::new(),
             // NOTE: this field should not be directly accessed or mutated. There is a getter provided to retrieve the value
             _initial_balance: initial_balance,
             final_balance: initial_balance,
             epoch_balance_delta: 0,
-        }
-    }
-    pub fn add_address_public_key(&mut self, address_public_key: FpVar<F>) {
-        if !self.has_address(address_public_key.clone()) {
-            self.used_address_public_keys
-                .push(Address::new(&address_public_key));
-        } else {
-            panic!(
-                "Repeat address public key {:?} added to used_address_public_keys",
-                address_public_key
-            );
         }
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
@@ -67,7 +72,7 @@ where
         self.spent_serial_numbers.push_back(sn);
     }
     pub fn known_addresses(&self) -> Vec<Address<F>> {
-        self.used_address_public_keys.clone()
+        self.known_address_public_keys.clone()
     }
     pub fn serial_numbers(&self) -> VecDeque<FpVar<F>> {
         self.spent_serial_numbers.clone()
@@ -105,11 +110,11 @@ where
         println!("Initial Epoch Balance: {}", self.initial_balance());
         println!("Final Epoch Balance: {}", self.final_balance());
         println!("Epoch Delta: {}", self.epoch_balance_delta);
-        // println!("Known Addresses: {:?}", self.used_address_public_keys);
+        // println!("Known Addresses: {:?}", self.known_address_public_keys);
         println!();
     }
     pub fn has_address(&self, address_public_key: FpVar<F>) -> bool {
-        self.used_address_public_keys.iter().any(|key| {
+        self.known_address_public_keys.iter().any(|key| {
             key.public_key()
                 .is_eq(&address_public_key)
                 .unwrap()
