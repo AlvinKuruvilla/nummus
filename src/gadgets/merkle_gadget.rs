@@ -86,7 +86,6 @@ impl MerkleTreeGadget {
 
     pub fn generate_proof_and_validate<F: PrimeField>(
         leaves: &[FpVar<F>],
-        cs: ConstraintSystemRef<F>,
         indices_to_prove: Vec<usize>,
     ) -> bool {
         // Pre-allocate memory for the leaf hashes

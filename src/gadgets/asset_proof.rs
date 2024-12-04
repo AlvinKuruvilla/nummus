@@ -21,9 +21,12 @@ pub fn count_occurrences(public_vector: Vec<u64>, secret_vector: Vec<u64>) -> Ha
 
     counts
 }
-pub fn check_general_reciprocal(num: f64, numerator: f64) -> (bool, f64) {
-    let reciprocal = numerator / num;
-    let result = num * reciprocal;
+pub fn check_general_reciprocal(denominator: f64, numerator: f64) -> (bool, f64) {
+    println!("Denominator: {:?}", denominator);
+    println!("Numerator: {:?}", numerator);
+    let reciprocal = numerator / denominator;
+    let result = denominator * reciprocal;
+    println!("Result: {:?}", result);
     ((result - numerator).abs() < f64::EPSILON, numerator) // Check if result is close to the numerator
 }
 
@@ -59,12 +62,15 @@ impl<F: Field> ConstraintSynthesizer<F> for AssetProof {
         let mut actual_counts: Vec<u32> = Vec::new();
         let counts = count_occurrences(self.blockchain_sns, self.spent_serial_numbers.clone());
         let m: Vec<u32> = counts.values().copied().collect();
+        println!("M:{:?}", m);
+        println!("Alpha: {:?}", self.alpha);
         let unique_public_set: HashSet<u64> = self.spent_serial_numbers.iter().copied().collect();
         let unique_public_set: Vec<u64> = Vec::from_iter(unique_public_set);
         let denominators: Vec<u64> = unique_public_set
             .iter()
             .map(|&x| x + self.alpha as u64)
             .collect();
+        println!("Denom:{:?}", denominators);
         for (index, _) in m.clone().into_iter().enumerate() {
             let (check, _) = check_general_reciprocal(denominators[index] as f64, m[index] as f64);
             if !check {

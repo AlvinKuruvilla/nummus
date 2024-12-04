@@ -70,8 +70,7 @@ where
 
         for (idx, _) in leaves.iter().enumerate() {
             // Validate each leaf
-            let is_valid =
-                MerkleTreeGadget::generate_proof_and_validate(&leaves, cs.clone(), vec![idx]);
+            let is_valid = MerkleTreeGadget::generate_proof_and_validate(&leaves, vec![idx]);
             if !is_valid {
                 panic!("Cannot get root hash if leaves are not all valid");
             }
