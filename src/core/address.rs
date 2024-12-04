@@ -22,23 +22,22 @@ where
         // Create a UnitVar instance
         let unit_var: UnitVar<F> = UnitVar::default();
 
-        // Use the secret_key_bytes (which is Vec<UInt8<F>>) directly
-        let sn = Sha256Gadget::evaluate(&unit_var, &secret_key_bytes)
+        // Use the secret_key_bytes directly in the hash computation
+        let sn = &Sha256Gadget::evaluate(&unit_var, &secret_key_bytes)
             .unwrap()
             .0
             .to_constraint_field()
-            .unwrap()[0]
-            .clone();
+            .unwrap()[0];
 
         Self {
-            public_key: sn,
+            public_key: sn.clone(),
             secret_key: secret_key.clone(),
         }
     }
-    pub fn public_key(&self) -> FpVar<F> {
-        self.public_key.clone()
+    pub fn public_key(&self) -> &FpVar<F> {
+        &self.public_key
     }
-    pub fn secret_key(&self) -> FpVar<F> {
-        self.secret_key.clone()
+    pub fn secret_key(&self) -> &FpVar<F> {
+        &self.secret_key
     }
 }

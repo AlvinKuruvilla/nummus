@@ -15,7 +15,7 @@ pub fn main() {
     // Create organizations
     for i in (0..RUN_CONFIG.org_count).progress() {
         Organization::create_known_addresses(
-            cs.clone(),
+            &cs,
             RUN_CONFIG.addresses_per_organization,
             i * RUN_CONFIG.addresses_per_organization,
         );

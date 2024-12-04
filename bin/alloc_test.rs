@@ -26,7 +26,7 @@ pub fn main() {
         let org_name = format!("org{}", i + 1);
         let initial_balance = rand::thread_rng().gen_range(5..500000); // Random initial balance
         let addresses = Organization::create_known_addresses(
-            cs.clone(),
+            &cs,
             RUN_CONFIG.addresses_per_organization,
             i * RUN_CONFIG.addresses_per_organization,
         );

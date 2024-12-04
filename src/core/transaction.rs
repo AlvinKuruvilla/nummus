@@ -57,10 +57,10 @@ where
         vec![
             self.transaction_id(),
             self.value_as_field_element(),
-            self.sender_address().public_key(),
-            self.sender_address().secret_key(),
-            self.receiver_address().public_key(),
-            self.receiver_address().secret_key(),
+            self.sender_address().public_key().clone(),
+            self.sender_address().secret_key().clone(),
+            self.receiver_address().public_key().clone(),
+            self.receiver_address().secret_key().clone(),
             self.serial_number(),
         ]
     }

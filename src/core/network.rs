@@ -37,8 +37,10 @@ where
     }
 
     pub fn forward_transaction(&mut self, t: Transaction<F>) {
-        let sender_key = t.sender_address().public_key();
-        let receiver_key = t.receiver_address().public_key();
+        let binding = t.sender_address();
+        let sender_key = binding.public_key();
+        let binding = t.receiver_address();
+        let receiver_key = binding.public_key();
         let serial_number = t.serial_number();
         let root = t.root();
         let value = t.value();
@@ -49,8 +51,8 @@ where
                 // println!("HERE");
                 // pause_until_enter();
                 // Check if the organization has either the sender or receiver address
-                let has_receiver = org.has_address(receiver_key.clone());
-                let has_sender = org.has_address(sender_key.clone());
+                let has_receiver = org.has_address(receiver_key);
+                let has_sender = org.has_address(sender_key);
 
                 if has_receiver {
                     org.add_serial_number(serial_number.clone());

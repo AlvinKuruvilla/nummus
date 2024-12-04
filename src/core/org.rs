@@ -66,7 +66,7 @@ where
         }
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
-        if self.has_serial_number(sn.clone()) {
+        if self.has_serial_number(&sn) {
             panic!("Repeat sn added to spent_serial_numbers");
         }
         self.spent_serial_numbers.push_back(sn);
@@ -113,19 +113,19 @@ where
         // println!("Known Addresses: {:?}", self.known_address_public_keys);
         println!();
     }
-    pub fn has_address(&self, address_public_key: FpVar<F>) -> bool {
+    pub fn has_address(&self, address_public_key: &FpVar<F>) -> bool {
         self.known_address_public_keys.iter().any(|key| {
             key.public_key()
-                .is_eq(&address_public_key)
+                .is_eq(address_public_key)
                 .unwrap()
                 .value()
                 .unwrap_or(false)
         })
     }
-    pub fn has_serial_number(&self, sn: FpVar<F>) -> bool {
+    pub fn has_serial_number(&self, sn: &FpVar<F>) -> bool {
         self.spent_serial_numbers
             .iter()
-            .any(|key| key.is_eq(&sn).unwrap().value().unwrap())
+            .any(|key| key.is_eq(sn).unwrap().value().unwrap())
     }
 
     pub fn is_involved(&self, t: &Transaction<F>) -> bool {
@@ -133,12 +133,11 @@ where
             || self.has_address(t.receiver_address().public_key())
     }
     pub fn create_known_addresses(
-        cs: ConstraintSystemRef<F>,
+        cs: &ConstraintSystemRef<F>,
         num_addresses: usize,
         offset: usize,
     ) -> Vec<Address<F>> {
         let mut addresses = Vec::with_capacity(num_addresses);
-        let cs = cs.clone();
         for i in 0..num_addresses {
             let input =
                 FpVar::new_input(cs.clone(), || Ok(F::from(i as u64 + offset as u64))).unwrap();
