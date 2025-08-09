@@ -1,4 +1,6 @@
 use ark_ff::PrimeField;
+use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
+use ark_relations::r1cs::ConstraintSystemRef;
 use std::{collections::HashMap, io::BufRead};
 
 use crate::{analysis::estimate_vec_memory_usage_in_gb, utils::fpvars_to_u64s};
@@ -117,6 +119,28 @@ where
                 fpvars_to_u64s(org.serial_numbers()),
                 blockchain_values.clone(),
             );
+        }
+    }
+    pub fn validate_no_zombie_serial_numbers(&mut self, cs: ConstraintSystemRef<F>) {
+        // Convert all blockchain keys to FpVar<F> first
+        let blockchain_keys: Vec<FpVar<F>> = self
+            .blockchain
+            .inner()
+            .into_keys()
+            .map(|key| FpVar::new_input(cs.clone(), || Ok(key)).unwrap()) // Create FpVar<F> for each key
+            .collect();
+
+        // Iterate over each organization and check for zombie serial numbers
+        for org in self.organizations.values_mut() {
+            let has_zombie_sn = org.unused_serial_numbers().iter().any(|sn| {
+                blockchain_keys
+                    .iter()
+                    .any(|key| sn.is_eq(key).unwrap().value().unwrap())
+            });
+
+            if has_zombie_sn {
+                panic!("Zombie SN used!");
+            }
         }
     }
     pub fn organizations(&self) -> HashMap<String, Organization<F>> {

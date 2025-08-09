@@ -11,6 +11,7 @@ use ark_r1cs_std::{fields::fp::FpVar, ToBytesGadget, ToConstraintFieldGadget};
 /// For our purposes, 'value' encapsulates the result of 'hash(p)'
 /// NOTE: The zcash specification defines their own methodologies for generating spending keys  which are the spiritual successor to the
 /// double-spending protection serial numbers provide
+#[derive(Clone)]
 pub struct TransactionSerialNumber<F: PrimeField> {
     value: FpVar<F>,
 }

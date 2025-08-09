@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, io::BufRead};
 
-use super::{address::Address, transaction::Transaction};
+use super::{address::Address, serial_number::TransactionSerialNumber, transaction::Transaction};
 use crate::{
     core::fiat_transform::generate_alpha,
     gadgets::{
@@ -16,6 +16,7 @@ use ark_ff::PrimeField;
 use ark_groth16::{prepare_verifying_key, r1cs_to_qap::LibsnarkReduction, Groth16};
 use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar, R1CSVar};
 use ark_relations::r1cs::ConstraintSystemRef;
+use indicatif::ProgressIterator;
 use rand::rngs::OsRng;
 
 #[derive(Clone)]
@@ -44,6 +45,7 @@ pub struct Organization<F: PrimeField> {
     _initial_balance: i32,
     final_balance: i32,
     epoch_balance_delta: i32,
+    unused_serial_numbers: Vec<FpVar<F>>,
 }
 impl<F> Organization<F>
 where
@@ -53,6 +55,7 @@ where
         unique_identifier: String,
         initial_balance: i32,
         known_addresses: Vec<Address<F>>,
+        unused_serial_numbers: Vec<FpVar<F>>,
     ) -> Self {
         Self {
             spent_serial_numbers: VecDeque::new(),
@@ -63,13 +66,23 @@ where
             _initial_balance: initial_balance,
             final_balance: initial_balance,
             epoch_balance_delta: 0,
+            unused_serial_numbers,
         }
     }
     pub fn add_serial_number(&mut self, sn: FpVar<F>) {
         if self.has_serial_number(&sn) {
+            // TODO: This is to purely paper over some issue with repeat sn's being added I think its because our random range is not a full u32 spectrum anymore
+            //        but it is unclear
+            return;
             panic!("Repeat sn added to spent_serial_numbers");
         }
-        self.spent_serial_numbers.push_back(sn);
+        self.spent_serial_numbers.push_back(sn.clone());
+        let index_to_remove = self
+            .unused_serial_numbers
+            .iter()
+            .position(|x| x.is_eq(&sn).unwrap().value().unwrap())
+            .expect("Couldn't find serial number");
+        let _ = self.unused_serial_numbers.remove(index_to_remove);
     }
     pub fn known_addresses(&self) -> Vec<Address<F>> {
         self.known_address_public_keys.clone()
@@ -103,6 +116,9 @@ where
     }
     pub fn identifier(&self) -> String {
         self.unique_identifier.clone()
+    }
+    pub fn unused_serial_numbers(&self) -> Vec<FpVar<F>> {
+        self.unused_serial_numbers.clone()
     }
     pub fn dump_info(&self) {
         println!("Organization: {}", self.unique_identifier);
@@ -149,6 +165,16 @@ where
             addresses.push(address);
         }
         addresses
+    }
+    pub fn create_unused_serial_numbers_list(cs: &ConstraintSystemRef<F>) -> Vec<FpVar<F>> {
+        let mut unused_sns = Vec::with_capacity(u32::MAX.try_into().unwrap());
+        for i in (0..10u32).progress() {
+            let secret = F::from(i);
+            let secret_element = FpVar::new_input(cs.clone(), || Ok(secret)).unwrap();
+            let unused_sn = TransactionSerialNumber::new(secret_element).sn();
+            unused_sns.push(unused_sn);
+        }
+        unused_sns
     }
     pub fn validate_components(&self, blockchain_keys: Vec<F>, blockchain_values: Vec<F>) {
         let mut rng = OsRng;

@@ -24,6 +24,8 @@ pub fn main() {
     // TODO: At the beginning of each new epoch should we change something about the organization's initial balances or their addresses?
     //       This may not necessarily be needed of we consider each run their oen epoch
     for i in 0..RUN_CONFIG.org_count {
+        let unused_serial_numbers = Organization::create_unused_serial_numbers_list(&cs);
+
         let org_name = format!("org{}", i + 1);
         let initial_balance = rand::thread_rng().gen_range(5..500000); // Random initial balance
         let addresses = Organization::create_known_addresses(
@@ -31,7 +33,12 @@ pub fn main() {
             RUN_CONFIG.addresses_per_organization,
             i * RUN_CONFIG.addresses_per_organization,
         );
-        let organization = Organization::new(org_name.clone(), initial_balance, addresses.to_vec());
+        let organization = Organization::new(
+            org_name.clone(),
+            initial_balance,
+            addresses.to_vec(),
+            unused_serial_numbers,
+        );
         organizations.push(organization.clone()); // Store organization for later access
         network.add_organization(organization);
     }

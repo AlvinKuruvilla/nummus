@@ -9,7 +9,8 @@ use rand::Rng;
 // Helper function to generate a random value in the specified range
 pub fn generate_random_in_range() -> Fr {
     let mut rng = rand::thread_rng();
-    let ret = Fr::from(rng.gen_range(0..u32::MAX));
+    // TODO: Change back to u32::MAX once done testing the zombie sn protection
+    let ret = Fr::from(rng.gen_range(0..10));
     // println!("Generated random serial number secret: {:?}", ret);
     #[allow(clippy::let_and_return)]
     ret

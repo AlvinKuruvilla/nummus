@@ -25,13 +25,20 @@ pub fn main() {
     //       This may not necessarily be needed of we consider each run their oen epoch
     for i in 0..RUN_CONFIG.org_count {
         let org_name = format!("org{}", i + 1);
+        let unused_serial_numbers = Organization::create_unused_serial_numbers_list(&cs);
+
         let initial_balance = rand::thread_rng().gen_range(5..500000); // Random initial balance
         let addresses = Organization::create_known_addresses(
             &cs,
             RUN_CONFIG.addresses_per_organization,
             i * RUN_CONFIG.addresses_per_organization,
         );
-        let organization = Organization::new(org_name.clone(), initial_balance, addresses.to_vec());
+        let organization = Organization::new(
+            org_name.clone(),
+            initial_balance,
+            addresses.to_vec(),
+            unused_serial_numbers,
+        );
         organizations.push(organization.clone()); // Store organization for later access
         network.add_organization(organization);
     }
